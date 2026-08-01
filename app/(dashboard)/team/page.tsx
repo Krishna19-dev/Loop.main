@@ -1,0 +1,174 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+import TeamHeader from "@/components/team/TeamHeader";
+import TeamCards from "@/components/team/TeamCards";
+import TeamFilters from "@/components/team/TeamFilters";
+import TeamTable from "@/components/team/TeamTable";
+import TeamPagination from "@/components/team/TeamPagination";
+import EmptyTeam from "@/components/team/EmptyTeam";
+import InviteMemberModal from "@/components/team/InviteMemberModal";
+
+import { TeamMember } from "@/types/team";
+import { teamService } from "@/services/team.service";
+import { authService } from "@/services/auth.service";
+
+export default function TeamPage() {
+  const [members, setMembers] = useState<TeamMember[]>([]);
+
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState("");
+  const [status, setStatus] = useState("");
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 10;
+
+  useEffect(() => {
+    async function loadMembers() {
+      const data = await teamService.getMembers();
+      setMembers(data);
+    }
+
+    loadMembers();
+  }, []);
+
+  const filteredMembers = useMemo(() => {
+    return members.filter((member) => {
+      const matchesSearch =
+        member.name
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+        member.email
+          .toLowerCase()
+          .includes(search.toLowerCase());
+
+      const matchesRole =
+        !role || member.role === role;
+
+      const matchesStatus =
+        !status || member.status === status;
+
+      return (
+        matchesSearch &&
+        matchesRole &&
+        matchesStatus
+      );
+    });
+  }, [members, search, role, status]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredMembers.length / pageSize)
+  );
+
+  const paginatedMembers =
+    filteredMembers.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    );
+
+  async function handleCreate(data: {
+    name: string;
+    email: string;
+    password?: string;
+    workspace: string;
+    role: "Admin" | "Analyst" | "Viewer";
+  }) {
+    const tempPassword = data.password || "password123";
+
+    // 1. Create record in team table
+    const newMember =
+      await teamService.createMember({
+        name: data.name,
+        email: data.email,
+        workspace: data.workspace,
+        role: data.role,
+        status: "Active",
+      });
+
+    // 2. Register account credentials in authService so user can sign in at /login
+    try {
+      const authRole = data.role.toUpperCase() as "ANALYST" | "VIEWER" | "ADMIN";
+      authService.createUser(
+        data.name,
+        data.email,
+        tempPassword,
+        authRole
+      );
+    } catch (err) {
+      console.log("Auth user creation note:", err);
+    }
+
+    setMembers((prev) => [
+      newMember,
+      ...prev,
+    ]);
+  }
+
+  async function handleDelete(
+    member: TeamMember
+  ) {
+    await teamService.deleteMember(member.id);
+
+    setMembers((prev) =>
+      prev.filter(
+        (item) => item.id !== member.id
+      )
+    );
+  }
+
+  return (
+    <>
+      <div className="space-y-8">
+        <TeamHeader
+          onInvite={() => setModalOpen(true)}
+        />
+
+        <TeamCards
+          members={members}
+        />
+
+        <TeamFilters
+          search={search}
+          onSearchChange={setSearch}
+          role={role}
+          onRoleChange={setRole}
+          status={status}
+          onStatusChange={setStatus}
+          onInvite={() => setModalOpen(true)}
+        />
+
+        {filteredMembers.length === 0 ? (
+          <EmptyTeam
+            onInvite={() => setModalOpen(true)}
+          />
+        ) : (
+          <>
+            <TeamTable
+              members={paginatedMembers}
+              onDelete={handleDelete}
+            />
+
+            <TeamPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredMembers.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        )}
+      </div>
+
+      <InviteMemberModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreate={handleCreate}
+      />
+    </>
+  );
+}

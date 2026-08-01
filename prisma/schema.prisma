@@ -1,0 +1,122 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [vector]
+}
+
+enum UserRole {
+  ADMIN
+  ANALYST
+  VIEWER
+}
+
+enum Sentiment {
+  POS
+  NEU
+  NEG
+}
+
+enum FeedbackStatus {
+  NEW
+  REVIEWED
+  ACTIONED
+}
+
+model Workspace {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  feedback Feedback[]
+  themes   Theme[]
+  reports  Report[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(VIEWER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspaceId Int
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  reports     Report[]
+}
+
+model Feedback {
+  id             Int            @id @default(autoincrement())
+  content        String         @db.Text
+  channel        String
+  sourceRef      String?
+  customerLabel  String?
+  sentiment      Sentiment?
+  sentimentScore Decimal?       @db.Decimal(4, 3)
+  status         FeedbackStatus @default(NEW)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  workspaceId Int
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  themes    FeedbackTheme[]
+  embedding Embedding?
+}
+
+model Theme {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  @db.Text
+  color       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspaceId Int
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  feedbacks FeedbackTheme[]
+}
+
+model FeedbackTheme {
+  feedbackId Int
+  themeId    Int
+  confidence Decimal @db.Decimal(4, 3)
+
+  feedback Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  theme    Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@id([feedbackId, themeId])
+}
+
+model Embedding {
+  id         Int                   @id @default(autoincrement())
+  feedbackId Int                   @unique
+  vector     Unsupported("vector")
+  createdAt  DateTime              @default(now())
+
+  feedback Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id          Int      @id @default(autoincrement())
+  title       String
+  periodStart DateTime
+  periodEnd   DateTime
+  contentJson Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspaceId Int
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  generatedById Int
+  generatedBy   User @relation(fields: [generatedById], references: [id], onDelete: Restrict)
+}

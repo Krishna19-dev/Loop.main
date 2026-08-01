@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════
+   LOOP DESIGN SYSTEM — Forest × Champagne
+   ═══════════════════════════════════════════════════ */
+
+@theme {
+  /* Primary — Deep Forest */
+  --color-forest:       #0F3028;
+  --color-forest-mid:   #1D463A;
+  --color-forest-light: #2A5147;
+
+  /* Accent — Warm Gold (Champagne) */
+  --color-champagne:      #E8C98F;
+  --color-champagne-deep: #D4B478; /* Slightly darker gold for hover states if needed */
+  --color-champagne-text: #5C4A2A;
+
+  /* Neutral Surfaces */
+  --color-cream:      #F9F6EF; /* Background / Soft Ivory */
+  --color-cream-dark: #F3E8D4; /* Hover Background / Light Cream */
+  --color-loop-border: #E7DDD0; /* Border / Light Beige */
+
+  /* Sentiment — Earthy */
+  --color-sage:     #6B8F71;
+  --color-sage-bg:  #D8EBD9;
+  --color-taupe:    #8A7E72;
+  --color-taupe-bg: #E8E0D8;
+  --color-terra:    #B85C3C;
+  --color-terra-bg: #F5DDD5;
+
+  /* Fonts */
+  --font-manrope: "Manrope", sans-serif;
+}
+
+:root {
+  --background: #F9F6EF;
+  --foreground: #0F3028;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), sans-serif;
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
