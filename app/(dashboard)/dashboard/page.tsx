@@ -70,7 +70,7 @@ export default function DashboardPage() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <FeedbackChart />
+          <FeedbackChart feedbacks={feedbacks} />
         </div>
         <SentimentChart feedbacks={feedbacks} />
       </div>
@@ -90,7 +90,7 @@ export default function DashboardPage() {
 
       <TopCategories feedbacks={feedbacks} />
 
-      <AIInsightsCard />
+      <AIInsightsCard feedbacks={feedbacks} />
 
       {/* View & Edit Feedback Drawer */}
       <FeedbackDrawer

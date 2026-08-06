@@ -8,45 +8,69 @@ import ChatWindow from "@/components/ask-loop/ChatWindow";
 
 import { chatService } from "@/services/chat.service";
 import { suggestedPrompts } from "@/data/chat";
-
-import { ChatMessage } from "@/types/chat";
+import { ChatMessage, ChatSession } from "@/types/chat";
 
 export default function AskLoopPage() {
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [selectedChat, setSelectedChat] = useState<string>("1");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedChat, setSelectedChat] = useState("1");
 
+  // Initial load of sessions
   useEffect(() => {
-    async function loadMessages() {
-      const data = await chatService.getMessages();
-      setMessages(data);
-    }
+    const loadedSessions = chatService.getSessions();
+    setSessions(loadedSessions);
 
-    loadMessages();
+    const initialId = loadedSessions.length > 0 ? loadedSessions[0].id : "1";
+    setSelectedChat(initialId);
+
+    const loadedMessages = chatService.getSessionMessages(initialId);
+    setMessages(loadedMessages);
   }, []);
 
-  async function handleSend(message: string) {
+  // When selected session changes, load messages for that specific session!
+  function handleSelectSession(sessionId: string) {
+    setSelectedChat(sessionId);
+    const msgs = chatService.getSessionMessages(sessionId);
+    setMessages(msgs);
+  }
+
+  async function handleSend(messageText: string) {
+    if (!messageText.trim()) return;
+
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
-      content: message,
+      content: messageText,
       createdAt: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       }),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    chatService.saveSessionMessages(selectedChat, updatedMessages);
 
     setLoading(true);
 
     try {
-      const response = await chatService.sendMessage(message);
+      const response = await chatService.sendMessage(messageText);
 
-      setMessages((prev) => [
-        ...prev,
-        response.reply,
-      ]);
+      const finalMessages = [...updatedMessages, response.reply];
+      setMessages(finalMessages);
+      chatService.saveSessionMessages(selectedChat, finalMessages);
+
+      // Auto-update session title if it's a new chat
+      const currentSession = sessions.find((s) => s.id === selectedChat);
+      if (currentSession && (currentSession.title === "New Conversation" || currentSession.title === "Customer Feedback Summary")) {
+        const newTitle = messageText.length > 25 ? `${messageText.slice(0, 25)}...` : messageText;
+        const updatedSessions = sessions.map((s) =>
+          s.id === selectedChat ? { ...s, title: newTitle, updatedAt: "Just now" } : s
+        );
+        setSessions(updatedSessions);
+        chatService.saveSessions(updatedSessions);
+      }
     } finally {
       setLoading(false);
     }
@@ -57,11 +81,27 @@ export default function AskLoopPage() {
   }
 
   function handleNewChat() {
-    // Later:
-    // await chatService.createSession()
+    const newSession = chatService.createSession();
+    const allSessions = chatService.getSessions();
+    setSessions(allSessions);
+    setSelectedChat(newSession.id);
+    const msgs = chatService.getSessionMessages(newSession.id);
+    setMessages(msgs);
+  }
 
-    setMessages([]);
-    setSelectedChat("");
+  function handleDeleteChat(sessionId: string) {
+    const remaining = chatService.deleteSession(sessionId);
+    setSessions(remaining);
+
+    if (selectedChat === sessionId) {
+      const nextId = remaining.length > 0 ? remaining[0].id : "";
+      setSelectedChat(nextId);
+      if (nextId) {
+        setMessages(chatService.getSessionMessages(nextId));
+      } else {
+        setMessages([]);
+      }
+    }
   }
 
   return (
@@ -71,9 +111,11 @@ export default function AskLoopPage() {
       <div className="grid h-[calc(100vh-240px)] grid-cols-12 gap-6">
         <div className="col-span-3">
           <ChatSidebar
+            sessions={sessions}
             selectedId={selectedChat}
-            onSelect={setSelectedChat}
+            onSelect={handleSelectSession}
             onNewChat={handleNewChat}
+            onDeleteChat={handleDeleteChat}
           />
         </div>
 

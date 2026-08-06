@@ -1,7 +1,9 @@
 "use client";
 
-import { X, Trash2, Calendar, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { X, Trash2, Calendar, Sparkles, RefreshCw } from "lucide-react";
 import { Feedback, FeedbackStatus } from "@/types/feedback";
+import { authService } from "@/services/auth.service";
 import SentimentBadge from "./SentimentBadge";
 
 interface FeedbackDrawerProps {
@@ -10,6 +12,7 @@ interface FeedbackDrawerProps {
   onClose: () => void;
   onStatusChange: (id: string, status: FeedbackStatus) => void;
   onDelete: (id: string) => void;
+  onReclassified?: (id: string, updatedData: Partial<Feedback>) => void;
 }
 
 export default function FeedbackDrawer({
@@ -18,8 +21,60 @@ export default function FeedbackDrawer({
   onClose,
   onStatusChange,
   onDelete,
+  onReclassified,
 }: FeedbackDrawerProps) {
+  const [isClassifying, setIsClassifying] = useState(false);
+  const [classifyError, setClassifyError] = useState("");
+  const [classifySuccess, setClassifySuccess] = useState("");
+
   if (!open || !feedback) return null;
+
+  const currentUser = authService.getCurrentUser();
+  const isViewer = currentUser?.role === "VIEWER";
+
+  async function handleReclassify() {
+    if (!feedback) return;
+
+    if (isViewer) {
+      setClassifyError("Forbidden: VIEWER role cannot perform AI classification (Read-only).");
+      return;
+    }
+
+    try {
+      setIsClassifying(true);
+      setClassifyError("");
+      setClassifySuccess("");
+
+      const res = await fetch("/api/ai/classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedbackId: feedback?.id, userRole: currentUser?.role }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Classification failed");
+      }
+
+      const updatedFields: Partial<Feedback> = {
+        sentiment: data.classification.sentiment,
+        sentimentScore: data.classification.sentimentScore,
+        themes: data.classification.themes,
+        featureArea: data.classification.featureArea,
+        category: data.classification.themes[0] || data.classification.featureArea || feedback.category,
+      };
+
+      Object.assign(feedback, updatedFields);
+
+      setClassifySuccess(`AI Re-classified with Gemini: ${data.classification.sentiment} (${updatedFields.category})`);
+      onReclassified?.(feedback.id, updatedFields);
+    } catch (err) {
+      setClassifyError(err instanceof Error ? err.message : "Classification failed");
+    } finally {
+      setIsClassifying(false);
+    }
+  }
 
   return (
     <>
@@ -50,6 +105,18 @@ export default function FeedbackDrawer({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto space-y-6 p-6">
+          {classifyError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600">
+              {classifyError}
+            </div>
+          )}
+
+          {classifySuccess && (
+            <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-xs font-semibold text-green-700">
+              {classifySuccess}
+            </div>
+          )}
+
           {/* Customer info */}
           <div className="rounded-2xl border border-loop-border bg-cream/30 p-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-taupe mb-1">
@@ -92,10 +159,10 @@ export default function FeedbackDrawer({
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-taupe mb-2">
-                Sentiment
+                Sentiment & Score
               </p>
               <div className="pt-1">
-                <SentimentBadge sentiment={feedback.sentiment} />
+                <SentimentBadge sentiment={feedback.sentiment} score={feedback.sentimentScore} />
               </div>
             </div>
           </div>
@@ -111,31 +178,100 @@ export default function FeedbackDrawer({
               <p className="mt-1 text-xs font-bold text-forest">{feedback.category}</p>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-taupe">Priority</p>
-              <p className={`mt-1 text-xs font-bold ${
-                feedback.priority === "High"
-                  ? "text-red-600"
-                  : feedback.priority === "Medium"
-                  ? "text-amber-600"
-                  : "text-emerald-600"
-              }`}>
-                {feedback.priority}
-              </p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-taupe">Feature Area</p>
+              <p className="mt-1 text-xs font-bold text-forest">{feedback.featureArea || feedback.category}</p>
             </div>
           </div>
 
-          {/* AI Summary Insight */}
-          <div>
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-forest mb-2">
-              <Sparkles size={14} className="text-amber-500" />
-              <span>AI Automated Insight</span>
+          {/* Prominent Stored Gemini AI Classification & Score Meter Card */}
+          <div className="rounded-2xl border border-loop-border bg-white p-4 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-taupe">
+                Gemini Sentiment Score
+              </span>
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-mono font-bold border ${
+                  (feedback.sentimentScore ?? 0) > 0
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : (feedback.sentimentScore ?? 0) < 0
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200"
+                }`}
+              >
+                {(feedback.sentimentScore ?? 0) > 0
+                  ? `+${Number(feedback.sentimentScore).toFixed(2)}`
+                  : Number(feedback.sentimentScore ?? 0).toFixed(2)}{" "}
+                <span className="text-[10px] font-normal text-slate-400">/ 1.00</span>
+              </span>
             </div>
+
+            {/* Sentiment Meter Bar */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] text-taupe font-semibold">
+                <span>Negative (-1.0)</span>
+                <span>Neutral (0.0)</span>
+                <span>Positive (+1.0)</span>
+              </div>
+              <div className="relative h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+                <div
+                  className={`h-full transition-all duration-500 rounded-full ${
+                    (feedback.sentimentScore ?? 0) > 0
+                      ? "bg-gradient-to-r from-emerald-400 to-emerald-600"
+                      : (feedback.sentimentScore ?? 0) < 0
+                      ? "bg-gradient-to-r from-red-400 to-red-600"
+                      : "bg-amber-400"
+                  }`}
+                  style={{
+                    width: `${Math.min(100, Math.max(5, (((feedback.sentimentScore ?? 0) + 1) / 2) * 100))}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {feedback.themes && feedback.themes.length > 0 && (
+              <div className="pt-2 border-t border-slate-100">
+                <span className="font-semibold text-taupe uppercase tracking-wider text-[10px] block mb-1.5">
+                  Classified Themes:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {feedback.themes.map((t, idx) => (
+                    <span
+                      key={idx}
+                      className="rounded-lg bg-forest/10 border border-forest/15 px-2.5 py-0.5 text-xs font-semibold text-forest"
+                    >
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* AI Summary Insight & Re-classify Action */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-forest">
+                <Sparkles size={14} className="text-amber-500" />
+                <span>AI Automated Insight (Gemini)</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleReclassify}
+                disabled={isClassifying}
+                className="flex items-center gap-1 text-xs font-bold text-forest hover:text-emerald-700 transition disabled:opacity-50"
+              >
+                <RefreshCw size={13} className={isClassifying ? "animate-spin" : ""} />
+                <span>{isClassifying ? "Classifying..." : "Re-classify with Gemini"}</span>
+              </button>
+            </div>
+
             <div className="rounded-2xl bg-sage-bg/60 border border-sage/20 p-4 text-xs leading-relaxed text-forest-mid">
               {feedback.sentiment === "Positive"
-                ? `Customer expressed high satisfaction with ${feedback.category.toLowerCase()}. Recommended action: Share with the engineering & product teams.`
+                ? `Customer expressed high satisfaction with ${(feedback.featureArea || feedback.category).toLowerCase()}. Recommended action: Share positive sentiment with product team.`
                 : feedback.sentiment === "Negative"
-                ? `Urgent issue flagged regarding ${feedback.category.toLowerCase()}. Priority level set to ${feedback.priority}. Recommended action: Assign support agent.`
-                : `Neutral sentiment detected regarding ${feedback.category.toLowerCase()}. Monitor feedback trends over time.`}
+                ? `Urgent issue flagged regarding ${(feedback.featureArea || feedback.category).toLowerCase()}. Priority level set to ${feedback.priority}. Recommended action: Assign support agent.`
+                : `Neutral sentiment detected regarding ${(feedback.featureArea || feedback.category).toLowerCase()}. Monitor feedback trends over time.`}
             </div>
           </div>
 

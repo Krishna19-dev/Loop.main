@@ -9,6 +9,8 @@ import TeamTable from "@/components/team/TeamTable";
 import TeamPagination from "@/components/team/TeamPagination";
 import EmptyTeam from "@/components/team/EmptyTeam";
 import InviteMemberModal from "@/components/team/InviteMemberModal";
+import ViewMemberModal from "@/components/team/ViewMemberModal";
+import EditMemberModal from "@/components/team/EditMemberModal";
 
 import { TeamMember } from "@/types/team";
 import { teamService } from "@/services/team.service";
@@ -22,6 +24,9 @@ export default function TeamPage() {
   const [status, setStatus] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -109,16 +114,36 @@ export default function TeamPage() {
     ]);
   }
 
-  async function handleDelete(
-    member: TeamMember
-  ) {
+  function handleView(member: TeamMember) {
+    setSelectedMember(member);
+    setViewModalOpen(true);
+  }
+
+  function handleEdit(member: TeamMember) {
+    setSelectedMember(member);
+    setEditModalOpen(true);
+  }
+
+  async function handleUpdateMember(id: string, updatedData: Partial<TeamMember>) {
+    const updated = await teamService.updateMember(id, updatedData);
+    if (updated) {
+      setMembers((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
+      );
+    }
+  }
+
+  async function handleDelete(member: TeamMember) {
     await teamService.deleteMember(member.id);
 
     setMembers((prev) =>
-      prev.filter(
-        (item) => item.id !== member.id
-      )
+      prev.filter((item) => item.id !== member.id)
     );
+    if (selectedMember?.id === member.id) {
+      setSelectedMember(null);
+      setViewModalOpen(false);
+      setEditModalOpen(false);
+    }
   }
 
   return (
@@ -150,6 +175,8 @@ export default function TeamPage() {
           <>
             <TeamTable
               members={paginatedMembers}
+              onView={handleView}
+              onEdit={handleEdit}
               onDelete={handleDelete}
             />
 
@@ -168,6 +195,26 @@ export default function TeamPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onCreate={handleCreate}
+      />
+
+      <ViewMemberModal
+        member={selectedMember}
+        open={viewModalOpen}
+        onClose={() => {
+          setViewModalOpen(false);
+          setSelectedMember(null);
+        }}
+        onEdit={handleEdit}
+      />
+
+      <EditMemberModal
+        member={selectedMember}
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedMember(null);
+        }}
+        onUpdate={handleUpdateMember}
       />
     </>
   );

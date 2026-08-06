@@ -7,12 +7,12 @@ interface TopCategoriesProps {
 }
 
 const colorMap = [
-  "bg-blue-500",
-  "bg-emerald-500",
+  "bg-emerald-600",
   "bg-amber-500",
   "bg-rose-500",
-  "bg-indigo-500",
-  "bg-violet-500",
+  "bg-blue-600",
+  "bg-forest",
+  "bg-sage",
 ];
 
 export default function TopCategories({ feedbacks }: TopCategoriesProps) {
@@ -30,8 +30,8 @@ export default function TopCategories({ feedbacks }: TopCategoriesProps) {
   const maxCount = Math.max(...categories.map((c) => c.count), 1);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-      <h2 className="text-lg font-semibold text-slate-800 mb-6">
+    <div className="bg-white rounded-2xl border border-loop-border shadow-sm p-6">
+      <h2 className="text-xl font-bold text-forest mb-6">
         Top Feedback Categories
       </h2>
 
@@ -39,16 +39,16 @@ export default function TopCategories({ feedbacks }: TopCategoriesProps) {
         {categories.map((category, idx) => (
           <div key={category.name}>
             <div className="flex justify-between mb-2 text-sm">
-              <span className="font-medium text-slate-700">
+              <span className="font-bold text-forest">
                 {category.name}
               </span>
 
-              <span className="text-slate-500 font-semibold">
-                {category.count} entries
+              <span className="text-taupe font-semibold text-xs">
+                {category.count} {category.count === 1 ? "entry" : "entries"}
               </span>
             </div>
 
-            <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-3 rounded-full bg-cream overflow-hidden border border-loop-border/40">
               <div
                 className={`${colorMap[idx % colorMap.length]} h-full rounded-full transition-all duration-500`}
                 style={{

@@ -54,7 +54,7 @@ export default function FeedbackRow({
 
       {/* Sentiment */}
       <td className="px-6 py-4">
-        <SentimentBadge sentiment={feedback.sentiment} />
+        <SentimentBadge sentiment={feedback.sentiment} score={feedback.sentimentScore} />
       </td>
 
       {/* Row Status Control */}

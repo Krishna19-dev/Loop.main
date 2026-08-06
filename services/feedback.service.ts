@@ -1,5 +1,6 @@
 import { feedbacks } from "@/data/feedback";
 import { Feedback } from "@/types/feedback";
+import { classifyFeedbackWithGemini } from "@/lib/ai";
 
 class FeedbackService {
   async getFeedback(): Promise<Feedback[]> {
@@ -23,13 +24,37 @@ class FeedbackService {
   }
 
   async createFeedback(
-    feedback: Omit<Feedback, "id">
+    feedback: Omit<Feedback, "id">,
+    autoClassify: boolean = true
   ): Promise<Feedback> {
-    // Future:
-    // POST /api/feedback
+    let classificationData: Partial<Feedback> = {};
+
+    if (autoClassify && feedback.message) {
+      try {
+        const existingThemes = Array.from(
+          new Set(feedbacks.map((f) => f.category).filter(Boolean))
+        );
+        const classification = await classifyFeedbackWithGemini(
+          feedback.message,
+          existingThemes
+        );
+
+        classificationData = {
+          sentiment: classification.sentiment,
+          sentimentScore: classification.sentimentScore,
+          themes: classification.themes,
+          featureArea: classification.featureArea,
+          category: classification.themes[0] || classification.featureArea || feedback.category || "General",
+          classifiedAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        console.warn("[Auto-classification warning on createFeedback]", err);
+      }
+    }
 
     const newFeedback: Feedback = {
       ...feedback,
+      ...classificationData,
       id: crypto.randomUUID(),
     };
 

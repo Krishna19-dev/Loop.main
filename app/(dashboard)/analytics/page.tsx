@@ -13,10 +13,12 @@ import SentimentPieChart from "@/components/analytics/SentimentPieChart";
 import CategoryBarChart from "@/components/analytics/CategoryBarChart";
 import RatingDistribution from "@/components/analytics/RatingDistribution";
 import AIInsightsCard from "@/components/analytics/AIInsightsCard";
+import ThemeClustersCard from "@/components/analytics/ThemeClustersCard";
 
 export default function AnalyticsPage() {
   const [currentUser] = useState<User | null>(() => authService.getCurrentUser());
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [isClusteringAI, setIsClusteringAI] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -25,6 +27,24 @@ export default function AnalyticsPage() {
     }
     loadData();
   }, []);
+
+  async function handleReclusterAI() {
+    try {
+      setIsClusteringAI(true);
+      const res = await fetch("/api/ai/cluster", { method: "POST" });
+      const data = await res.json();
+
+      if (res.ok && data.clusters) {
+        // Refresh feedbacks to pick up clustered themes
+        const updatedList = await feedbackService.getFeedback();
+        setFeedbacks(updatedList);
+      }
+    } catch (err) {
+      console.warn("[AI Recluster Error]", err);
+    } finally {
+      setIsClusteringAI(false);
+    }
+  }
 
   function handleExportPdf() {
     const total = feedbacks.length || 1;
@@ -175,6 +195,12 @@ export default function AnalyticsPage() {
         <CategoryBarChart feedbacks={feedbacks} />
         <RatingDistribution feedbacks={feedbacks} />
       </div>
+
+      <ThemeClustersCard
+        feedbacks={feedbacks}
+        onReclusterAI={handleReclusterAI}
+        isClusteringAI={isClusteringAI}
+      />
 
       <AIInsightsCard feedbacks={feedbacks} />
     </div>

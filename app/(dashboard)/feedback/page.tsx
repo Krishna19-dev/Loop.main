@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import FeedbackHeader from "@/components/feedback/FeedbackHeader";
 import FeedbackFilters from "@/components/feedback/FeedbackFilters";
@@ -15,9 +16,12 @@ import { feedbackService } from "@/services/feedback.service";
 import { Feedback, FeedbackStatus } from "@/types/feedback";
 
 export default function FeedbackPage() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+
   const [feedback, setFeedback] = useState<Feedback[]>([]);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [status, setStatus] = useState("");
   const [sentiment, setSentiment] = useState("");
 
@@ -99,6 +103,15 @@ export default function FeedbackPage() {
     setDrawerOpen(true);
   }
 
+  function handleReclassified(id: string, updatedData: Partial<Feedback>) {
+    setFeedback((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updatedData } : item))
+    );
+    if (selectedFeedback && selectedFeedback.id === id) {
+      setSelectedFeedback((prev) => (prev ? { ...prev, ...updatedData } : null));
+    }
+  }
+
   return (
     <>
       <div className="space-y-8">
@@ -169,6 +182,7 @@ export default function FeedbackPage() {
         }}
         onStatusChange={handleStatusChange}
         onDelete={handleDeleteFeedback}
+        onReclassified={handleReclassified}
       />
     </>
   );
