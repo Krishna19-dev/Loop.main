@@ -23,6 +23,7 @@ export default function AnalyticsCards({ feedbacks }: AnalyticsCardsProps) {
         title="Total Feedback"
         value={total.toLocaleString()}
         change="+18%"
+        period="month"
         icon={<MessageSquare size={24} />}
         color="bg-forest text-champagne border border-forest-light"
       />
@@ -31,6 +32,7 @@ export default function AnalyticsCards({ feedbacks }: AnalyticsCardsProps) {
         title="Average Rating"
         value={avgRating}
         change="+4%"
+        period="month"
         icon={<Star size={24} />}
         color="bg-amber-500 text-white"
       />
@@ -39,6 +41,7 @@ export default function AnalyticsCards({ feedbacks }: AnalyticsCardsProps) {
         title="Positive Sentiment"
         value={positiveRate}
         change="+6%"
+        period="month"
         icon={<Smile size={24} />}
         color="bg-sage-bg0 text-forest"
       />
@@ -47,6 +50,7 @@ export default function AnalyticsCards({ feedbacks }: AnalyticsCardsProps) {
         title="Pending Reviews"
         value={pendingCount.toString()}
         change="Requires action"
+        periodLabel="pending review"
         icon={<Clock size={24} />}
         color="bg-emerald-700 text-white"
       />

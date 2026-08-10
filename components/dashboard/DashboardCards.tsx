@@ -21,6 +21,7 @@ export default function DashboardCards({ feedbacks }: DashboardCardsProps) {
         value={total.toLocaleString()}
         change="+18%"
         trend="up"
+        period="month"
         icon={<MessageSquare size={22} />}
         iconBg="#F3E8D4"
         iconColor="#0F3028"
@@ -30,6 +31,7 @@ export default function DashboardCards({ feedbacks }: DashboardCardsProps) {
         value={positive.toLocaleString()}
         change={`${total > 0 ? Math.round((positive / total) * 100) : 0}%`}
         trend="up"
+        period="month"
         icon={<Smile size={22} />}
         iconBg="#D8EBD9"
         iconColor="#6B8F71"
@@ -39,6 +41,7 @@ export default function DashboardCards({ feedbacks }: DashboardCardsProps) {
         value={negative.toLocaleString()}
         change={`${total > 0 ? Math.round((negative / total) * 100) : 0}%`}
         trend="down"
+        period="month"
         icon={<Frown size={22} />}
         iconBg="#F5DDD5"
         iconColor="#B85C3C"
@@ -48,6 +51,7 @@ export default function DashboardCards({ feedbacks }: DashboardCardsProps) {
         value={pending.toLocaleString()}
         change={`${pending} unresolved`}
         trend="neutral"
+        periodLabel="requires action"
         icon={<Clock size={22} />}
         iconBg="#E8E0D8"
         iconColor="#8A7E72"

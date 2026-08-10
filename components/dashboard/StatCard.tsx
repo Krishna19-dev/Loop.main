@@ -7,6 +7,8 @@ interface StatCardProps {
   icon: ReactNode;
   change?: string;
   trend?: "up" | "down" | "neutral";
+  period?: string;
+  periodLabel?: string;
   iconBg?: string;
   iconColor?: string;
   color?: string;
@@ -18,12 +20,16 @@ export default function StatCard({
   icon,
   change = "+0%",
   trend = "up",
+  period = "month",
+  periodLabel,
   iconBg = "#F3E8D4",
   iconColor = "#0F3028",
   color,
 }: StatCardProps) {
   const isUp = trend === "up";
   const isDown = trend === "down";
+
+  const displayPeriodLabel = periodLabel ?? `vs last ${period}`;
 
   return (
     <div
@@ -54,8 +60,8 @@ export default function StatCard({
             >
               {change}
             </span>
-            <span className="text-xs" style={{ color: "#8A7E72" }}>
-              vs last period
+            <span className="text-xs font-medium" style={{ color: "#8A7E72" }}>
+              {displayPeriodLabel}
             </span>
           </div>
         </div>

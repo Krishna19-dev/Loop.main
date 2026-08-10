@@ -8,9 +8,10 @@ import { Sparkles } from "lucide-react";
 interface WelcomeBannerProps {
   name?: string;
   feedbacks?: Feedback[];
+  workspaceName?: string;
 }
 
-export default function WelcomeBanner({ name, feedbacks = [] }: WelcomeBannerProps) {
+export default function WelcomeBanner({ name, feedbacks = [], workspaceName }: WelcomeBannerProps) {
   const [userName, setUserName] = useState<string>(name || "User");
   const [greeting, setGreeting] = useState<string>("Good Day");
 
@@ -26,6 +27,7 @@ export default function WelcomeBanner({ name, feedbacks = [] }: WelcomeBannerPro
   }, [name]);
 
   const firstName = userName ? userName.split(" ")[0] : "User";
+  const displayWorkspaceName = workspaceName || `${firstName}'s Workspace`;
 
   // Dynamic quick stats from live feedback dataset
   const total = feedbacks.length;
@@ -70,11 +72,11 @@ export default function WelcomeBanner({ name, feedbacks = [] }: WelcomeBannerPro
               className="text-3xl font-black tracking-tight"
               style={{ fontFamily: "var(--font-manrope)", color: "#E8C98F" }}
             >
-              {greeting}, {firstName} 👋
+              Welcome to {displayWorkspaceName} 👋
             </h1>
 
             <p className="max-w-lg text-sm leading-relaxed" style={{ color: "rgba(249,246,239,0.6)" }}>
-              Your feedback workspace is live. LOOP AI has analyzed your latest data — check the insights below.
+              {greeting}, {firstName}! Your feedback workspace is live. LOOP AI has analyzed your latest data — check the insights below.
             </p>
           </div>
 

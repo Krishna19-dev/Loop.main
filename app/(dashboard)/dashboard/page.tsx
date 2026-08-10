@@ -16,6 +16,7 @@ import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
 import TopCategories from "@/components/dashboard/TopCategories";
 import AIInsightsCard from "@/components/dashboard/AIInsightsCard";
 import FeedbackDrawer from "@/components/feedback/FeedbackDrawer";
+import BrandLoader from "@/components/ui/BrandLoader";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -23,11 +24,16 @@ export default function DashboardPage() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
-      const data = await feedbackService.getFeedback();
-      setFeedbacks(data);
+      try {
+        const data = await feedbackService.getFeedback();
+        setFeedbacks(data);
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadData();
   }, []);
@@ -62,9 +68,13 @@ export default function DashboardPage() {
     }
   }
 
+  if (isLoading) {
+    return <BrandLoader fullScreen={false} />;
+  }
+
   return (
     <div className="space-y-8">
-      <WelcomeBanner name={currentUser?.name} feedbacks={feedbacks} />
+      <WelcomeBanner name={currentUser?.name} feedbacks={feedbacks} workspaceName="Customer Support Workspace" />
 
       <DashboardCards feedbacks={feedbacks} />
 

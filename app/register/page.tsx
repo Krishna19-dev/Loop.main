@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { Bot, Mail, Lock, User, Eye, EyeOff, Sparkles, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import BrandLoader from "@/components/ui/BrandLoader";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,9 +15,10 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [hasAdmin] = useState(() => authService.adminExists());
 
-  function handleRegister() {
+  async function handleRegister() {
     setError("");
 
     if (!name || !email || !password) {
@@ -24,16 +26,23 @@ export default function RegisterPage() {
       return;
     }
 
+    setLoading(true);
     try {
       authService.register(name, email, password);
+      await new Promise((res) => setTimeout(res, 800));
       router.push("/login");
     } catch (err) {
+      setLoading(false);
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("Registration failed.");
       }
     }
+  }
+
+  if (loading) {
+    return <BrandLoader fullScreen={true} />;
   }
 
 

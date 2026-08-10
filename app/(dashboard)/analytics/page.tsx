@@ -14,16 +14,22 @@ import CategoryBarChart from "@/components/analytics/CategoryBarChart";
 import RatingDistribution from "@/components/analytics/RatingDistribution";
 import AIInsightsCard from "@/components/analytics/AIInsightsCard";
 import ThemeClustersCard from "@/components/analytics/ThemeClustersCard";
+import BrandLoader from "@/components/ui/BrandLoader";
 
 export default function AnalyticsPage() {
   const [currentUser] = useState<User | null>(() => authService.getCurrentUser());
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [isClusteringAI, setIsClusteringAI] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
-      const list = await feedbackService.getFeedback();
-      setFeedbacks(list);
+      try {
+        const list = await feedbackService.getFeedback();
+        setFeedbacks(list);
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadData();
   }, []);
@@ -156,6 +162,10 @@ export default function AnalyticsPage() {
     setTimeout(() => {
       printWindow.print();
     }, 500);
+  }
+
+  if (isLoading) {
+    return <BrandLoader fullScreen={false} />;
   }
 
   if (!currentUser) return null;

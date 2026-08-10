@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { Bot, Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
 import Link from "next/link";
+import BrandLoader from "@/components/ui/BrandLoader";
+import MatchAndMoveSplash from "@/components/ui/MatchAndMoveSplash";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,20 +24,27 @@ export default function LoginPage() {
 
     try {
       authService.login(email, password);
+      // Brief delay to allow full-screen loader animation to render smoothly before redirecting
+      await new Promise((res) => setTimeout(res, 800));
       router.push("/dashboard");
     } catch (err) {
+      setLoading(false);
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("Login failed.");
       }
-    } finally {
-      setLoading(false);
     }
+  }
+
+  if (loading) {
+    return <BrandLoader fullScreen={true} />;
   }
 
   return (
     <div className="relative flex min-h-screen overflow-hidden">
+      {/* Initial Match & Move Splash Overlay on Web Load */}
+      <MatchAndMoveSplash />
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#1B253F]" />
 
