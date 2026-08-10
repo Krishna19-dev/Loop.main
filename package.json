@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "clean": "npx rimraf .next",
+    "postinstall": "prisma generate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
