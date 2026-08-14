@@ -37,52 +37,13 @@ Project LOOP is engineered for extreme data throughput, sub-16ms UI rendering, a
 
 ## 🔑 Demo Seed Accounts & Role Credentials
 
-The system comes pre-seeded with **33 Indian Team Accounts** (3 Demo Accounts, 10 Analysts, and 20 Viewers) to test real-time collaboration, notification broadcasting, and RBAC permissions:
+The system is pre-seeded with 3 quick-login demo role accounts to test Server-Side Role-Based Access Control (RBAC):
 
-### ⚡ 3 Quick-Login Demo Accounts
-| Role | Name | Email | Password | Access Level |
+| Role | Name | Email | Password | Access Level & Permissions |
 | :--- | :--- | :--- | :--- | :--- |
 | **ADMIN** | Admin User | `admin@demo.com` | `password123` | **Full Access**: Can create/edit workspaces, manage users, delete reports, ingest/re-classify feedback. |
 | **ANALYST** | Analyst User | `analyst@demo.com` | `password123` | **Analytical Access**: Can create/edit feedback, delete reports, trigger AI clustering, run VoC reports. |
 | **VIEWER** | Viewer User | `viewer@demo.com` | `password123` | **Read-Only Access**: Can view dashboards, search feedback, generate VoC reports. Write actions forbidden (`403`). |
-
-### 📈 10 Indian Analyst Accounts
-| Name | Email | Password | Role | Department Workspace |
-| :--- | :--- | :--- | :--- | :--- |
-| **Arjun Sharma** | `arjun.sharma@company.com` | `Arjun@2026` | Analyst | Product Analytics |
-| **Priya Patel** | `priya.patel@company.com` | `PriyaPass99` | Analyst | Customer Support |
-| **Rahul Verma** | `rahul.verma@company.com` | `Rahul#321` | Analyst | Sales Intelligence |
-| **Neha Gupta** | `neha.gupta@company.com` | `Neha@loop88` | Analyst | Marketing Ops |
-| **Vikram Singh** | `vikram.singh@company.com` | `VikramS_99` | Analyst | Engineering |
-| **Ananya Rao** | `ananya.rao@company.com` | `AnanyaPass1` | Analyst | Customer Support |
-| **Aditya Kapoor** | `aditya.kapoor@company.com` | `Aditya@2026` | Analyst | Sales Intelligence |
-| **Kavya Joshi** | `kavya.joshi@company.com` | `KavyaLoop#7` | Analyst | Product Analytics |
-| **Rohan Mehta** | `rohan.mehta@company.com` | `RohanM_432` | Analyst | Engineering |
-| **Sneha Kulkarni** | `sneha.kulkarni@company.com` | `Sneha@pass55` | Analyst | Marketing Ops |
-
-### 👁️ 20 Indian Viewer Accounts
-| Name | Email | Password | Role | Department Workspace |
-| :--- | :--- | :--- | :--- | :--- |
-| **Siddharth Nair** | `siddharth.nair@company.com` | `SidNair#123` | Viewer | Executive Board |
-| **Pooja Reddy** | `pooja.reddy@company.com` | `PoojaR_888` | Viewer | Customer Support |
-| **Amitabh Saxena** | `amitabh.saxena@company.com` | `Amitabh@2026` | Viewer | Finance |
-| **Ritu Sen** | `ritu.sen@company.com` | `RituPass#77` | Viewer | Executive Board |
-| **Karan Malhotra** | `karan.malhotra@company.com` | `KaranM_321` | Viewer | Product Analytics |
-| **Meera Chopra** | `meera.chopra@company.com` | `Meera@loop99` | Viewer | Marketing Ops |
-| **Rajesh Agarwal** | `rajesh.agarwal@company.com` | `RajeshPass0` | Viewer | Finance |
-| **Divya Deshmukh** | `divya.deshmukh@company.com` | `DivyaD#2026` | Viewer | Engineering |
-| **Tarun Bhatia** | `tarun.bhatia@company.com` | `TarunB_101` | Viewer | Sales Intelligence |
-| **Ishita Bansal** | `ishita.bansal@company.com` | `IshitaPass7` | Viewer | Executive Board |
-| **Manish Pandey** | `manish.pandey@company.com` | `ManishP#2026` | Viewer | Customer Support |
-| **Swati Iyer** | `swati.iyer@company.com` | `SwatiPass88` | Viewer | Product Analytics |
-| **Varun Singhania** | `varun.singhania@company.com` | `VarunS_456` | Viewer | Sales Intelligence |
-| **Deepika Padukone** | `deepika.p@company.com` | `Deepika#loop7` | Viewer | Marketing Ops |
-| **Alok Tripathi** | `alok.tripathi@company.com` | `AlokPass_99` | Viewer | Engineering |
-| **Tanvi Trivedi** | `tanvi.trivedi@company.com` | `TanviT_123` | Viewer | Customer Support |
-| **Harish Varma** | `harish.varma@company.com` | `HarishV@2026` | Viewer | Sales Intelligence |
-| **Nisha Chawla** | `nisha.chawla@company.com` | `NishaC#321` | Viewer | Product Analytics |
-| **Gaurav Mukherjee** | `gaurav.m@company.com` | `GauravPass10` | Viewer | Engineering |
-| **Shruti Kadam** | `shruti.kadam@company.com` | `ShrutiK_777` | Viewer | Executive Board |
 
 ---
 
