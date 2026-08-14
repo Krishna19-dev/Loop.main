@@ -4,6 +4,14 @@
 
 ---
 
+## 🌐 Live Production Deployment
+
+- **Production Live Web App**: [https://loop-main.onrender.com/](https://loop-main.onrender.com/)
+- **Live Deployment Status**: 🟢 Active & Deployed on Render.com (SSL Encrypted)
+- **Official GitHub Repository**: [https://github.com/Krishna19-dev/Loop.main](https://github.com/Krishna19-dev/Loop.main)
+
+---
+
 ## 🌟 Executive Overview
 
 **Project LOOP** is an AI-powered SaaS platform designed to transform scattered customer feedback (live class app crash reports, video buffering complaints, OTP authentication issues, billing failures, and feature requests) into prioritized, evidence-backed product intelligence for decision-makers.
