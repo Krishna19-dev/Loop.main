@@ -61,12 +61,12 @@ export default function AskLoopPage() {
       setMessages(finalMessages);
       chatService.saveSessionMessages(selectedChat, finalMessages);
 
-      // Auto-update session title if it's a new chat
+      // Auto-update session title with concise 2-3 words title if it's a new chat
       const currentSession = sessions.find((s) => s.id === selectedChat);
       if (currentSession && (currentSession.title === "New Conversation" || currentSession.title === "Customer Feedback Summary")) {
-        const newTitle = messageText.length > 25 ? `${messageText.slice(0, 25)}...` : messageText;
+        const shortTitle = chatService.generateShortTitle(messageText);
         const updatedSessions = sessions.map((s) =>
-          s.id === selectedChat ? { ...s, title: newTitle, updatedAt: "Just now" } : s
+          s.id === selectedChat ? { ...s, title: shortTitle, updatedAt: "Just now" } : s
         );
         setSessions(updatedSessions);
         chatService.saveSessions(updatedSessions);
@@ -87,6 +87,11 @@ export default function AskLoopPage() {
     setSelectedChat(newSession.id);
     const msgs = chatService.getSessionMessages(newSession.id);
     setMessages(msgs);
+  }
+
+  function handleRenameChat(sessionId: string, newTitle: string) {
+    const updated = chatService.renameSession(sessionId, newTitle);
+    setSessions(updated);
   }
 
   function handleDeleteChat(sessionId: string) {
@@ -115,6 +120,7 @@ export default function AskLoopPage() {
             selectedId={selectedChat}
             onSelect={handleSelectSession}
             onNewChat={handleNewChat}
+            onRenameChat={handleRenameChat}
             onDeleteChat={handleDeleteChat}
           />
         </div>

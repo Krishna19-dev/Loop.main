@@ -15,6 +15,7 @@ import {
   Settings,
   LogOut,
   TrendingUp,
+  LucideIcon,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -24,7 +25,7 @@ interface SidebarProps {
 interface NavItem {
   name: string;
   href: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
 }
 
 export default function Sidebar({ role }: SidebarProps) {
@@ -63,7 +64,7 @@ export default function Sidebar({ role }: SidebarProps) {
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
-  let navItems = adminNavItems;
+  let navItems: NavItem[] = adminNavItems;
   if (userRole === "ANALYST") navItems = analystNavItems;
   else if (userRole === "VIEWER") navItems = viewerNavItems;
 

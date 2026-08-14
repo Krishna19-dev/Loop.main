@@ -9,9 +9,13 @@ import WorkspaceTable from "@/components/workspace/WorkspaceTable";
 import WorkspacePagination from "@/components/workspace/WorkspacePagination";
 import EmptyWorkspace from "@/components/workspace/EmptyWorkspace";
 import CreateWorkspaceModal from "@/components/workspace/CreateWorkspaceModal";
+import ViewWorkspaceModal from "@/components/workspace/ViewWorkspaceModal";
+import EditWorkspaceModal from "@/components/workspace/EditWorkspaceModal";
+import AdminOnlyModal from "@/components/workspace/AdminOnlyModal";
 
 import { Workspace } from "@/types/workspace";
 import { workspaceService } from "@/services/workspace.service";
+import { authService } from "@/services/auth.service";
 
 export default function WorkspacesPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -19,8 +23,12 @@ export default function WorkspacesPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [viewingWorkspace, setViewingWorkspace] = useState<Workspace | null>(null);
+  const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null);
+  const [accessDeniedOpen, setAccessDeniedOpen] = useState(false);
 
+  const [currentUserRole, setCurrentUserRole] = useState<string>("ADMIN");
   const [currentPage, setCurrentPage] = useState(1);
 
   const pageSize = 10;
@@ -31,8 +39,15 @@ export default function WorkspacesPage() {
       setWorkspaces(data);
     }
 
+    const user = authService.getCurrentUser();
+    if (user?.role) {
+      setCurrentUserRole(user.role);
+    }
+
     loadWorkspaces();
   }, []);
+
+  const isAdmin = currentUserRole.toUpperCase() === "ADMIN";
 
   const filteredWorkspaces = useMemo(() => {
     return workspaces.filter((workspace) => {
@@ -61,11 +76,24 @@ export default function WorkspacesPage() {
     currentPage * pageSize
   );
 
+  function handleOpenCreate() {
+    if (!isAdmin) {
+      setAccessDeniedOpen(true);
+      return;
+    }
+    setCreateModalOpen(true);
+  }
+
   async function handleCreate(data: {
     name: string;
     description: string;
     owner: string;
   }) {
+    if (!isAdmin) {
+      setAccessDeniedOpen(true);
+      return;
+    }
+
     await workspaceService.createWorkspace({
       name: data.name,
       description: data.description,
@@ -77,20 +105,43 @@ export default function WorkspacesPage() {
 
     const updated = await workspaceService.getWorkspaces();
     setWorkspaces(updated);
-    setModalOpen(false);
+    setCreateModalOpen(false);
   }
 
-  async function handleDelete(
-    workspace: Workspace
-  ) {
-    await workspaceService.deleteWorkspace(
-      workspace.id
-    );
+  function handleView(workspace: Workspace) {
+    setViewingWorkspace(workspace);
+  }
+
+  function handleEdit(workspace: Workspace) {
+    if (!isAdmin) {
+      setAccessDeniedOpen(true);
+      return;
+    }
+    setEditingWorkspace(workspace);
+  }
+
+  async function handleSaveEdit(id: string, updatedData: Partial<Workspace>) {
+    if (!isAdmin) {
+      setAccessDeniedOpen(true);
+      return;
+    }
+
+    await workspaceService.updateWorkspace(id, updatedData);
+    const updatedList = await workspaceService.getWorkspaces();
+    setWorkspaces(updatedList);
+    setEditingWorkspace(null);
+  }
+
+  async function handleDelete(workspace: Workspace) {
+    if (!isAdmin) {
+      setAccessDeniedOpen(true);
+      return;
+    }
+
+    await workspaceService.deleteWorkspace(workspace.id);
 
     setWorkspaces((prev) =>
-      prev.filter(
-        (item) => item.id !== workspace.id
-      )
+      prev.filter((item) => item.id !== workspace.id)
     );
   }
 
@@ -98,7 +149,7 @@ export default function WorkspacesPage() {
     <>
       <div className="space-y-8">
         <WorkspaceHeader
-          onCreate={() => setModalOpen(true)}
+          onCreate={handleOpenCreate}
         />
 
         <WorkspaceCards
@@ -110,17 +161,19 @@ export default function WorkspacesPage() {
           onSearchChange={setSearch}
           status={status}
           onStatusChange={setStatus}
-          onCreate={() => setModalOpen(true)}
+          onCreate={handleOpenCreate}
         />
 
         {filteredWorkspaces.length === 0 ? (
           <EmptyWorkspace
-            onCreate={() => setModalOpen(true)}
+            onCreate={handleOpenCreate}
           />
         ) : (
           <>
             <WorkspaceTable
               workspaces={paginatedWorkspaces}
+              onView={handleView}
+              onEdit={handleEdit}
               onDelete={handleDelete}
             />
 
@@ -135,10 +188,37 @@ export default function WorkspacesPage() {
         )}
       </div>
 
+      {/* Create Workspace Modal */}
       <CreateWorkspaceModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
         onCreate={handleCreate}
+      />
+
+      {/* View Workspace Details Modal */}
+      <ViewWorkspaceModal
+        open={Boolean(viewingWorkspace)}
+        workspace={viewingWorkspace}
+        onClose={() => setViewingWorkspace(null)}
+        onEdit={(ws) => {
+          setViewingWorkspace(null);
+          handleEdit(ws);
+        }}
+      />
+
+      {/* Edit Workspace Settings Modal (Admin Only) */}
+      <EditWorkspaceModal
+        open={Boolean(editingWorkspace)}
+        workspace={editingWorkspace}
+        onClose={() => setEditingWorkspace(null)}
+        onSave={handleSaveEdit}
+      />
+
+      {/* Access Denied Alert Modal for Non-Admins (Analyst & Viewer) */}
+      <AdminOnlyModal
+        open={accessDeniedOpen}
+        userRole={currentUserRole}
+        onClose={() => setAccessDeniedOpen(false)}
       />
     </>
   );

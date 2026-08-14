@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
-import { Bot, Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Bot, Mail, Lock, Eye, EyeOff, Sparkles, ArrowLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import BrandLoader from "@/components/ui/BrandLoader";
 import MatchAndMoveSplash from "@/components/ui/MatchAndMoveSplash";
@@ -42,53 +42,67 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden">
+    <div className="relative flex min-h-screen overflow-hidden bg-[#0F3028] text-[#F9F6EF] selection:bg-[#E8C98F] selection:text-[#5C4A2A]">
       {/* Initial Match & Move Splash Overlay on Web Load */}
       <MatchAndMoveSplash />
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#1B253F]" />
+      
+      {/* Ambient background glows in Forest x Champagne theme */}
+      <div className="absolute top-[-100px] left-[-100px] h-[500px] w-[500px] rounded-full bg-[#E8C98F]/10 blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-80px] right-[-60px] h-[450px] w-[450px] rounded-full bg-[#1D463A] blur-[100px] pointer-events-none" />
 
-      {/* Animated glow blobs */}
-      <div className="absolute top-[-120px] left-[-100px] h-[500px] w-[500px] rounded-full bg-forest text-champagne border border-forest-light/20 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-80px] right-[-60px] h-[400px] w-[400px] rounded-full bg-indigo-600/20 blur-[100px] pointer-events-none" />
+      {/* Top Left Navigation Back Button */}
+      <div className="absolute top-6 left-6 z-20">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1D463A] border border-[#2A5147] text-xs font-semibold text-[#F9F6EF] hover:border-[#E8C98F]/50 transition-all duration-200 backdrop-blur-md group shadow-md"
+        >
+          <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1 text-[#E8C98F]" />
+          <span>Back to Home</span>
+        </Link>
+      </div>
 
       {/* Left Panel — Branding */}
       <div className="relative z-10 hidden w-1/2 flex-col items-center justify-center p-16 lg:flex">
-        <div className="max-w-md space-y-8 text-white">
+        <div className="max-w-md space-y-8">
           {/* Logo */}
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest text-champagne border border-forest-light shadow-lg shadow-emerald-600/40">
-              <Bot size={28} className="text-white" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8C98F] text-[#0F3028] shadow-lg">
+              <Bot size={28} className="text-[#0F3028]" />
             </div>
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight">
-                Project <span className="text-champagne">LOOP</span>
+              <h1 className="font-manrope text-3xl font-extrabold tracking-tight text-[#F9F6EF]">
+                Project <span className="text-[#E8C98F]">LOOP</span>
               </h1>
-              <p className="text-sm text-taupe">AI Feedback Management</p>
+              <p className="text-xs uppercase tracking-wider font-semibold text-[#E8C98F]/80">
+                AI Feedback Intelligence
+              </p>
             </div>
           </div>
 
           {/* Tagline */}
           <div className="space-y-4">
-            <h2 className="text-5xl font-bold leading-tight">
+            <h2 className="font-manrope text-4xl sm:text-5xl font-bold leading-tight text-[#F9F6EF]">
               Turn Feedback<br />
-              Into <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Insights</span>
+              Into{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8C98F] to-[#F3E8D4]">
+                Actionable Insights
+              </span>
             </h2>
-            <p className="text-lg text-taupe leading-relaxed">
-              AI-powered customer feedback analysis. Monitor sentiment, generate reports, and act on insights — all from one dashboard.
+            <p className="text-base text-[#F9F6EF]/80 leading-relaxed font-sans">
+              AI-powered customer feedback analysis. Monitor sentiment, cluster requests, generate VoC reports, and act on evidence — all from one dashboard.
             </p>
           </div>
 
           {/* Feature Highlights */}
-          <div className="space-y-3">
+          <div className="space-y-3 pt-2">
             {[
-              { icon: "📊", label: "Real-time analytics & dashboards" },
-              { icon: "🤖", label: "AI-generated insights & summaries" },
-              { icon: "👥", label: "Multi-role team collaboration" },
+              { label: "Real-time feedback clustering & sentiment" },
+              { label: "RAG Q&A grounded in real customer quotes" },
+              { label: "Multi-tenant isolation & RBAC team access" },
             ].map((item) => (
-              <div key={item.label} className="flex items-center gap-3 text-taupe">
-                <span className="text-xl">{item.icon}</span>
-                <span className="text-sm">{item.label}</span>
+              <div key={item.label} className="flex items-center gap-3 text-sm text-[#F9F6EF]/90 font-medium">
+                <CheckCircle2 size={18} className="text-[#E8C98F]" />
+                <span>{item.label}</span>
               </div>
             ))}
           </div>
@@ -99,41 +113,40 @@ export default function LoginPage() {
       <div className="relative z-10 flex w-full flex-col items-center justify-center p-6 lg:w-1/2">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest text-champagne border border-forest-light">
-              <Bot size={20} className="text-white" />
+          <div className="mb-8 flex items-center justify-center gap-3 lg:hidden pt-8">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8C98F] text-[#0F3028]">
+              <Bot size={20} className="text-[#0F3028]" />
             </div>
-            <span className="text-2xl font-bold text-white">
-              Project <span className="text-champagne">LOOP</span>
+            <span className="font-manrope text-2xl font-bold text-[#F9F6EF]">
+              Project <span className="text-[#E8C98F]">LOOP</span>
             </span>
           </div>
 
-          {/* Card */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+          {/* Login Card */}
+          <div className="rounded-3xl border border-[#2A5147] bg-[#1D463A]/90 p-8 shadow-2xl backdrop-blur-xl">
             <div className="mb-8">
-              <div className="inline-flex items-center gap-2 rounded-full bg-forest text-champagne border border-forest-light/20 px-3 py-1 text-xs font-medium text-champagne border border-sage/20">
-                <Sparkles size={12} />
-                Secure Login
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#0F3028] px-3.5 py-1 text-xs font-semibold text-[#E8C98F] border border-[#2A5147]">
+                <Sparkles size={12} className="text-[#E8C98F]" />
+                Secure Workspace Login
               </div>
-              <h2 className="mt-3 text-3xl font-bold text-white">Welcome back</h2>
-              <p className="mt-1 text-taupe text-sm">Sign in to your workspace</p>
+              <h2 className="mt-3 font-manrope text-3xl font-bold text-[#F9F6EF]">Welcome back</h2>
+              <p className="mt-1 text-sm text-[#F9F6EF]/75">Sign in to your customer feedback intelligence workspace</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-taupe mb-2">
+                <label className="block text-xs font-bold text-[#E8C98F] mb-2 uppercase tracking-wider">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-taupe" />
+                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F9F6EF]/60" />
                   <input
                     type="email"
                     placeholder="you@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/8 py-3 pl-11 pr-4 text-sm text-white placeholder:text-taupe outline-none transition focus:border-sage focus:ring-2 focus:ring-sage-bg"
-                    style={{ background: "rgba(255,255,255,0.05)" }}
+                    className="w-full rounded-xl border border-[#2A5147] bg-[#0F3028] py-3 pl-11 pr-4 text-sm text-[#F9F6EF] placeholder:text-[#F9F6EF]/40 outline-none transition focus:border-[#E8C98F] focus:ring-2 focus:ring-[#E8C98F]/20"
                     required
                   />
                 </div>
@@ -141,24 +154,23 @@ export default function LoginPage() {
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-semibold text-taupe mb-2">
+                <label className="block text-xs font-bold text-[#E8C98F] mb-2 uppercase tracking-wider">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-taupe" />
+                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F9F6EF]/60" />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 py-3 pl-11 pr-12 text-sm text-white placeholder:text-taupe outline-none transition focus:border-sage focus:ring-2 focus:ring-sage-bg"
-                    style={{ background: "rgba(255,255,255,0.05)" }}
+                    className="w-full rounded-xl border border-[#2A5147] bg-[#0F3028] py-3 pl-11 pr-12 text-sm text-[#F9F6EF] placeholder:text-[#F9F6EF]/40 outline-none transition focus:border-[#E8C98F] focus:ring-2 focus:ring-[#E8C98F]/20"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-taupe hover:text-slate-200"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F9F6EF]/60 hover:text-[#F9F6EF]"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -166,7 +178,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                <div className="rounded-xl border border-[#B85C3C]/40 bg-[#F5DDD5]/10 px-4 py-3 text-sm text-[#B85C3C]">
                   {error}
                 </div>
               )}
@@ -174,39 +186,39 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-gradient-to-r from-forest to-forest-light py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-600/40 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full rounded-xl bg-[#E8C98F] hover:bg-[#D4B478] py-3.5 text-sm font-bold text-[#5C4A2A] shadow-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Signing in..." : "Sign In"}
               </button>
             </form>
 
-            {/* Demo Accounts */}
-            <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs font-semibold text-taupe mb-2">
-                🔑 Demo Accounts <span className="font-normal text-taupe">(Password: password123)</span>
+            {/* Demo Accounts Box */}
+            <div className="mt-6 rounded-xl border border-[#2A5147] bg-[#0F3028] p-4 space-y-2">
+              <p className="text-xs font-semibold text-[#E8C98F]">
+                🔑 Demo Accounts <span className="font-normal text-[#F9F6EF]/70">(Password: password123)</span>
               </p>
               <div className="space-y-1.5">
                 {[
-                  { role: "Admin", email: "admin@demo.com", color: "text-blue-400" },
-                  { role: "Analyst", email: "analyst@demo.com", color: "text-champagne" },
-                  { role: "Viewer", email: "viewer@demo.com", color: "text-violet-400" },
+                  { role: "Admin", email: "admin@demo.com", color: "text-[#6B8F71]" },
+                  { role: "Analyst", email: "analyst@demo.com", color: "text-[#E8C98F]" },
+                  { role: "Viewer", email: "viewer@demo.com", color: "text-[#8A7E72]" },
                 ].map((demo) => (
                   <button
                     key={demo.email}
                     type="button"
                     onClick={() => { setEmail(demo.email); setPassword("password123"); }}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs hover:bg-white/5 transition"
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs hover:bg-[#1D463A] transition"
                   >
-                    <span className={`font-semibold ${demo.color}`}>{demo.role}</span>
-                    <span className="text-taupe">{demo.email}</span>
+                    <span className={`font-bold ${demo.color}`}>{demo.role}</span>
+                    <span className="text-[#F9F6EF]/80 font-mono text-[11px]">{demo.email}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <p className="mt-5 text-center text-xs text-taupe">
+            <p className="mt-5 text-center text-xs text-[#F9F6EF]/75">
               First time here?{" "}
-              <Link href="/register" className="text-champagne font-medium hover:text-champagne transition">
+              <Link href="/register" className="text-[#E8C98F] font-bold hover:underline">
                 Create workspace
               </Link>
             </p>

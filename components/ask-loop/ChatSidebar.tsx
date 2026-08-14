@@ -1,6 +1,7 @@
 "use client";
 
-import { MessageSquare, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { MessageSquare, Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import { ChatSession } from "@/types/chat";
 
 interface ChatSidebarProps {
@@ -9,6 +10,7 @@ interface ChatSidebarProps {
   onSelect?: (id: string) => void;
   onNewChat?: () => void;
   onDeleteChat?: (id: string) => void;
+  onRenameChat?: (id: string, newTitle: string) => void;
 }
 
 export default function ChatSidebar({
@@ -17,7 +19,30 @@ export default function ChatSidebar({
   onSelect,
   onNewChat,
   onDeleteChat,
+  onRenameChat,
 }: ChatSidebarProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState<string>("");
+
+  function startRename(chat: ChatSession, e: React.MouseEvent) {
+    e.stopPropagation();
+    setEditingId(chat.id);
+    setEditTitle(chat.title);
+  }
+
+  function saveRename(id: string, e?: React.MouseEvent | React.FormEvent) {
+    if (e) e.stopPropagation();
+    if (editTitle.trim() && onRenameChat) {
+      onRenameChat(id, editTitle.trim());
+    }
+    setEditingId(null);
+  }
+
+  function cancelRename(e: React.MouseEvent) {
+    e.stopPropagation();
+    setEditingId(null);
+  }
+
   return (
     <aside className="flex h-full flex-col rounded-2xl border border-loop-border bg-white shadow-sm">
       {/* Header */}
@@ -40,6 +65,7 @@ export default function ChatSidebar({
         <div className="space-y-2">
           {sessions.map((chat) => {
             const active = selectedId === chat.id;
+            const isEditing = editingId === chat.id;
 
             return (
               <div
@@ -50,39 +76,94 @@ export default function ChatSidebar({
                     : "border-transparent hover:border-loop-border hover:bg-cream"
                 }`}
               >
-                <button
-                  type="button"
-                  onClick={() => onSelect?.(chat.id)}
-                  className="flex flex-1 items-center gap-3 p-3.5 text-left overflow-hidden"
-                >
-                  <MessageSquare
-                    size={18}
-                    className={active ? "text-forest shrink-0" : "text-sage shrink-0"}
-                  />
-
-                  <div className="truncate">
-                    <p className={`text-xs font-bold truncate ${active ? "text-forest" : "text-slate-800"}`}>
-                      {chat.title}
-                    </p>
-
-                    <p className="mt-0.5 text-[10px] text-taupe font-medium">
-                      {chat.updatedAt}
-                    </p>
-                  </div>
-                </button>
-
-                {onDeleteChat && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteChat(chat.id);
+                {isEditing ? (
+                  /* Inline Rename Form */
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      saveRename(chat.id);
                     }}
-                    title="Delete Chat"
-                    className="mr-2.5 rounded-lg p-1.5 text-slate-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                    className="flex flex-1 items-center gap-2 p-2"
                   >
-                    <Trash2 size={15} />
-                  </button>
+                    <MessageSquare size={16} className="text-forest shrink-0 ml-1" />
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                      autoFocus
+                      className="w-full rounded-lg border border-sage bg-white px-2 py-1 text-xs text-forest outline-none focus:ring-1 focus:ring-sage font-medium"
+                    />
+                    <button
+                      type="submit"
+                      title="Save title"
+                      className="rounded-md p-1 text-emerald-700 hover:bg-emerald-100 transition"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelRename}
+                      title="Cancel"
+                      className="rounded-md p-1 text-slate-500 hover:bg-slate-200 transition"
+                    >
+                      <X size={14} />
+                    </button>
+                  </form>
+                ) : (
+                  /* Standard Session Row */
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onSelect?.(chat.id)}
+                      className="flex flex-1 items-center gap-3 p-3.5 text-left overflow-hidden"
+                    >
+                      <MessageSquare
+                        size={18}
+                        className={active ? "text-forest shrink-0" : "text-sage shrink-0"}
+                      />
+
+                      <div className="truncate">
+                        <p className={`text-xs font-bold truncate ${active ? "text-forest" : "text-slate-800"}`}>
+                          {chat.title}
+                        </p>
+
+                        <p className="mt-0.5 text-[10px] text-taupe font-medium">
+                          {chat.updatedAt}
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* Action Buttons (Rename & Delete) */}
+                    <div className="flex items-center gap-1 mr-2 opacity-0 group-hover:opacity-100 transition">
+                      {onRenameChat && (
+                        <button
+                          type="button"
+                          onClick={(e) => startRename(chat, e)}
+                          title="Rename Chat"
+                          className="rounded-lg p-1.5 text-slate-500 transition hover:bg-white hover:text-forest shadow-xs border border-transparent hover:border-loop-border"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
+
+                      {onDeleteChat && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteChat(chat.id);
+                          }}
+                          title="Delete Chat"
+                          className="rounded-lg p-1.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-200"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             );

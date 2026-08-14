@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
-import { Bot, Mail, Lock, User, Eye, EyeOff, Sparkles, ShieldCheck } from "lucide-react";
+import { Bot, Mail, Lock, User, Eye, EyeOff, Sparkles, ShieldCheck, ArrowLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import BrandLoader from "@/components/ui/BrandLoader";
 
@@ -45,31 +45,39 @@ export default function RegisterPage() {
     return <BrandLoader fullScreen={true} />;
   }
 
-
-
   // Admin already exists — block registration
   if (hasAdmin) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#1B253F]" />
-        <div className="absolute top-[-100px] left-[-100px] h-[400px] w-[400px] rounded-full bg-blue-600/20 blur-[100px] pointer-events-none" />
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-6 bg-[#0F3028] text-[#F9F6EF]">
+        <div className="absolute inset-0 bg-radial from-[#E8C98F]/10 via-transparent to-transparent pointer-events-none" />
 
-        <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/20 border border-amber-500/30">
-            <ShieldCheck size={28} className="text-amber-400" />
+        {/* Top Left Navigation Back Button */}
+        <div className="absolute top-6 left-6 z-20">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1D463A] border border-[#2A5147] text-xs font-semibold text-[#F9F6EF] hover:border-[#E8C98F]/50 transition-all duration-200 backdrop-blur-md group shadow-md"
+          >
+            <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1 text-[#E8C98F]" />
+            <span>Back to Home</span>
+          </Link>
+        </div>
+
+        <div className="relative z-10 w-full max-w-md rounded-3xl border border-[#2A5147] bg-[#1D463A]/90 p-8 shadow-2xl backdrop-blur-xl text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0F3028] border border-[#2A5147]">
+            <ShieldCheck size={32} className="text-[#E8C98F]" />
           </div>
 
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="font-manrope text-2xl font-bold text-[#F9F6EF]">
             Workspace Already Registered
           </h1>
 
-          <p className="mt-3 text-sm text-slate-400 leading-relaxed">
-            An Administrator account already exists for this workspace. Registration is disabled to protect your workspace security.
+          <p className="mt-3 text-sm text-[#F9F6EF]/75 leading-relaxed font-sans">
+            An Administrator account already exists for this workspace. Registration is disabled to protect workspace security.
           </p>
 
           <button
             onClick={() => router.push("/login")}
-            className="mt-6 w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+            className="mt-6 w-full rounded-xl bg-[#E8C98F] hover:bg-[#D4B478] py-3.5 text-sm font-bold text-[#5C4A2A] shadow-lg transition-all duration-200"
           >
             Go to Login
           </button>
@@ -79,46 +87,62 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#1B253F]" />
-      <div className="absolute top-[-120px] right-[-80px] h-[450px] w-[450px] rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-80px] left-[-60px] h-[350px] w-[350px] rounded-full bg-blue-600/20 blur-[100px] pointer-events-none" />
+    <div className="relative flex min-h-screen overflow-hidden bg-[#0F3028] text-[#F9F6EF] selection:bg-[#E8C98F] selection:text-[#5C4A2A]">
+      {/* Top Left Navigation Back Button */}
+      <div className="absolute top-6 left-6 z-20">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1D463A] border border-[#2A5147] text-xs font-semibold text-[#F9F6EF] hover:border-[#E8C98F]/50 transition-all duration-200 backdrop-blur-md group shadow-md"
+        >
+          <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1 text-[#E8C98F]" />
+          <span>Back to Home</span>
+        </Link>
+      </div>
+
+      {/* Ambient background glows */}
+      <div className="absolute top-[-120px] right-[-80px] h-[450px] w-[450px] rounded-full bg-[#E8C98F]/10 blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-80px] left-[-60px] h-[350px] w-[350px] rounded-full bg-[#1D463A] blur-[100px] pointer-events-none" />
 
       {/* Left Panel — Branding */}
       <div className="relative z-10 hidden w-1/2 flex-col items-center justify-center p-16 lg:flex">
-        <div className="max-w-md space-y-8 text-white">
+        <div className="max-w-md space-y-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/40">
-              <Bot size={28} className="text-white" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8C98F] text-[#0F3028] shadow-lg">
+              <Bot size={28} className="text-[#0F3028]" />
             </div>
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight">
-                Project <span className="text-blue-400">LOOP</span>
+              <h1 className="font-manrope text-3xl font-extrabold tracking-tight text-[#F9F6EF]">
+                Project <span className="text-[#E8C98F]">LOOP</span>
               </h1>
-              <p className="text-sm text-slate-400">AI Feedback Management</p>
+              <p className="text-xs uppercase tracking-wider font-semibold text-[#E8C98F]/80">
+                AI Feedback Intelligence
+              </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-5xl font-bold leading-tight">
+            <h2 className="font-manrope text-4xl sm:text-5xl font-bold leading-tight text-[#F9F6EF]">
               Set Up Your<br />
-              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Workspace</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8C98F] to-[#F3E8D4]">
+                Workspace Admin
+              </span>
             </h2>
-            <p className="text-lg text-slate-300 leading-relaxed">
+            <p className="text-base text-[#F9F6EF]/80 leading-relaxed font-sans">
               Create the Administrator account for your LOOP workspace. You can invite Analysts and Viewers after setup.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">After registration you can:</p>
+          <div className="rounded-2xl border border-[#2A5147] bg-[#1D463A] p-6 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-wider text-[#E8C98F]">
+              After setup you can:
+            </p>
             {[
-              "Invite team members with custom roles",
-              "Start collecting and analyzing feedback",
-              "Generate AI-powered reports",
+              "Invite team members with role-based access",
+              "Ingest support tickets, reviews & CSAT surveys",
+              "Generate 1-click executive VoC digests",
             ].map((item) => (
-              <div key={item} className="flex items-center gap-3 text-slate-300 text-sm">
-                <div className="h-2 w-2 rounded-full bg-blue-400 shrink-0" />
+              <div key={item} className="flex items-center gap-3 text-[#F9F6EF]/90 text-sm font-medium">
+                <CheckCircle2 size={16} className="text-[#E8C98F]" />
                 {item}
               </div>
             ))}
@@ -130,76 +154,79 @@ export default function RegisterPage() {
       <div className="relative z-10 flex w-full flex-col items-center justify-center p-6 lg:w-1/2">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600">
-              <Bot size={20} className="text-white" />
+          <div className="mb-8 flex items-center justify-center gap-3 lg:hidden pt-8">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8C98F] text-[#0F3028]">
+              <Bot size={20} className="text-[#0F3028]" />
             </div>
-            <span className="text-2xl font-bold text-white">
-              Project <span className="text-blue-400">LOOP</span>
+            <span className="font-manrope text-2xl font-bold text-[#F9F6EF]">
+              Project <span className="text-[#E8C98F]">LOOP</span>
             </span>
           </div>
 
           {/* Card */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+          <div className="rounded-3xl border border-[#2A5147] bg-[#1D463A]/90 p-8 shadow-2xl backdrop-blur-xl">
             <div className="mb-8">
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600/20 px-3 py-1 text-xs font-medium text-emerald-300 border border-emerald-500/20">
-                <Sparkles size={12} />
-                New Workspace
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#0F3028] px-3 py-1 text-xs font-semibold text-[#E8C98F] border border-[#2A5147]">
+                <Sparkles size={12} className="text-[#E8C98F]" />
+                New Workspace Admin
               </div>
-              <h2 className="mt-3 text-3xl font-bold text-white">Create account</h2>
-              <p className="mt-1 text-slate-400 text-sm">You&apos;ll be the workspace Administrator</p>
+              <h2 className="mt-3 font-manrope text-3xl font-bold text-[#F9F6EF]">Create account</h2>
+              <p className="mt-1 text-sm text-[#F9F6EF]/75">You&apos;ll be the workspace Administrator</p>
             </div>
 
             <div className="space-y-5">
               {/* Name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2">Full Name</label>
+                <label className="block text-xs font-bold text-[#E8C98F] mb-2 uppercase tracking-wider">
+                  Full Name
+                </label>
                 <div className="relative">
-                  <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F9F6EF]/60" />
                   <input
                     type="text"
                     placeholder="John Smith"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                    style={{ background: "rgba(255,255,255,0.05)" }}
+                    className="w-full rounded-xl border border-[#2A5147] bg-[#0F3028] py-3 pl-11 pr-4 text-sm text-[#F9F6EF] placeholder:text-[#F9F6EF]/40 outline-none transition focus:border-[#E8C98F] focus:ring-2 focus:ring-[#E8C98F]/20"
                   />
                 </div>
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2">Email Address</label>
+                <label className="block text-xs font-bold text-[#E8C98F] mb-2 uppercase tracking-wider">
+                  Email Address
+                </label>
                 <div className="relative">
-                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F9F6EF]/60" />
                   <input
                     type="email"
                     placeholder="you@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                    style={{ background: "rgba(255,255,255,0.05)" }}
+                    className="w-full rounded-xl border border-[#2A5147] bg-[#0F3028] py-3 pl-11 pr-4 text-sm text-[#F9F6EF] placeholder:text-[#F9F6EF]/40 outline-none transition focus:border-[#E8C98F] focus:ring-2 focus:ring-[#E8C98F]/20"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2">Password</label>
+                <label className="block text-xs font-bold text-[#E8C98F] mb-2 uppercase tracking-wider">
+                  Password
+                </label>
                 <div className="relative">
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F9F6EF]/60" />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a strong password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 py-3 pl-11 pr-12 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                    style={{ background: "rgba(255,255,255,0.05)" }}
+                    className="w-full rounded-xl border border-[#2A5147] bg-[#0F3028] py-3 pl-11 pr-12 text-sm text-[#F9F6EF] placeholder:text-[#F9F6EF]/40 outline-none transition focus:border-[#E8C98F] focus:ring-2 focus:ring-[#E8C98F]/20"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F9F6EF]/60 hover:text-[#F9F6EF]"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -207,22 +234,22 @@ export default function RegisterPage() {
               </div>
 
               {error && (
-                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                <div className="rounded-xl border border-[#B85C3C]/40 bg-[#F5DDD5]/10 px-4 py-3 text-sm text-[#B85C3C]">
                   {error}
                 </div>
               )}
 
               <button
                 onClick={handleRegister}
-                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/40"
+                className="w-full rounded-xl bg-[#E8C98F] hover:bg-[#D4B478] py-3.5 text-sm font-bold text-[#5C4A2A] shadow-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
               >
                 Create Administrator Account
               </button>
             </div>
 
-            <p className="mt-5 text-center text-xs text-slate-500">
+            <p className="mt-5 text-center text-xs text-[#F9F6EF]/75">
               Already have an account?{" "}
-              <Link href="/login" className="text-blue-400 font-medium hover:text-blue-300 transition">
+              <Link href="/login" className="text-[#E8C98F] font-bold hover:underline">
                 Sign in
               </Link>
             </p>

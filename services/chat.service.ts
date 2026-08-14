@@ -180,10 +180,47 @@ class ChatService {
     return newSession;
   }
 
+  renameSession(sessionId: string, newTitle: string): ChatSession[] {
+    const trimmedTitle = newTitle.trim();
+    if (!trimmedTitle) return this.getSessions();
+    const sessions = this.getSessions().map((s) =>
+      s.id === sessionId ? { ...s, title: trimmedTitle } : s
+    );
+    this.saveSessions(sessions);
+    return sessions;
+  }
+
   deleteSession(sessionId: string): ChatSession[] {
     const sessions = this.getSessions().filter((s) => s.id !== sessionId);
     this.saveSessions(sessions);
     return sessions;
+  }
+
+  generateShortTitle(message: string): string {
+    if (!message || !message.trim()) return "New Chat";
+
+    const stopWords = new Set([
+      "what", "is", "are", "the", "a", "an", "about", "how", "to", "can", "you",
+      "show", "me", "give", "list", "get", "find", "for", "in", "on", "of", "with",
+      "at", "by", "from", "up", "into", "over", "after", "please", "would",
+      "like", "tell", "which", "why", "who", "where", "our", "my", "your", "this", "that"
+    ]);
+
+    const words = message
+      .replace(/[^\w\s]/gi, "")
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0);
+
+    const keyWords = words.filter((w) => !stopWords.has(w.toLowerCase()));
+    const selectedWords = keyWords.length >= 2 ? keyWords : words;
+    const maxWords = selectedWords.slice(0, 3);
+    
+    const capitalized = maxWords.map(
+      (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+    );
+
+    return capitalized.join(" ") || "Feedback Query";
   }
 
   async sendMessage(message: string): Promise<SendMessageResponse> {

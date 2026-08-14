@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setMounted(true);
     const current = authService.getCurrentUser();
     if (!current) {
-      router.push("/login");
+      router.replace("/login");
     } else {
       setUser(current);
     }
