@@ -13,6 +13,8 @@ import AddFeedbackModal from "@/components/feedback/AddFeedbackModal";
 import CSVImportModal from "@/components/feedback/CSVImportModal";
 
 import { feedbackService } from "@/services/feedback.service";
+import { authService } from "@/services/auth.service";
+import { notificationService } from "@/services/notification.service";
 import { Feedback, FeedbackStatus } from "@/types/feedback";
 
 export default function FeedbackPage() {
@@ -31,6 +33,7 @@ export default function FeedbackPage() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentUserRole, setCurrentUserRole] = useState<string>("ADMIN");
   const pageSize = 10;
 
   useEffect(() => {
@@ -38,8 +41,20 @@ export default function FeedbackPage() {
       const data = await feedbackService.getFeedback();
       setFeedback([...data]);
     }
+
+    const user = authService.getCurrentUser();
+    if (user?.role) {
+      setCurrentUserRole(user.role);
+    }
+
     loadFeedback();
+    window.addEventListener("loop_feedback_updated", loadFeedback);
+    return () => {
+      window.removeEventListener("loop_feedback_updated", loadFeedback);
+    };
   }, []);
+
+  const isViewer = currentUserRole.toUpperCase() === "VIEWER";
 
   // Filtered feedback
   const filteredFeedback = useMemo(() => {
@@ -64,22 +79,49 @@ export default function FeedbackPage() {
     currentPage * pageSize
   );
 
-  // Handlers
+  // Handlers with Notification Triggers
   async function handleAddSingleFeedback(newEntry: Omit<Feedback, "id">) {
+    if (isViewer) return;
     const created = await feedbackService.createFeedback(newEntry);
     setFeedback((prev) => [created, ...prev]);
+
+    // Trigger #4: Analyst activity notification
+    const currentUser = authService.getCurrentUser();
+    if (currentUser?.role?.toUpperCase() === "ANALYST") {
+      notificationService.notifyRole(
+        currentUser.workspaceId || "ws_demo",
+        "ADMIN",
+        "ANALYST_ACTIVITY",
+        "Analyst activity",
+        `${currentUser.name} created a new feedback item`
+      );
+    }
   }
 
   async function handleImportCSV(items: Omit<Feedback, "id">[]) {
+    if (isViewer) return;
     const createdItems: Feedback[] = [];
     for (const item of items) {
       const created = await feedbackService.createFeedback(item);
       createdItems.push(created);
     }
     setFeedback((prev) => [...createdItems, ...prev]);
+
+    // Trigger #4: Analyst activity notification
+    const currentUser = authService.getCurrentUser();
+    if (currentUser?.role?.toUpperCase() === "ANALYST") {
+      notificationService.notifyRole(
+        currentUser.workspaceId || "ws_demo",
+        "ADMIN",
+        "ANALYST_ACTIVITY",
+        "Analyst activity",
+        `${currentUser.name} imported ${items.length} items via CSV`
+      );
+    }
   }
 
   async function handleStatusChange(id: string, newStatus: FeedbackStatus) {
+    if (isViewer) return;
     await feedbackService.updateFeedback(id, { status: newStatus });
     setFeedback((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
@@ -87,9 +129,22 @@ export default function FeedbackPage() {
     if (selectedFeedback && selectedFeedback.id === id) {
       setSelectedFeedback((prev) => (prev ? { ...prev, status: newStatus } : null));
     }
+
+    // Trigger #4: Analyst activity notification
+    const currentUser = authService.getCurrentUser();
+    if (currentUser?.role?.toUpperCase() === "ANALYST") {
+      notificationService.notifyRole(
+        currentUser.workspaceId || "ws_demo",
+        "ADMIN",
+        "ANALYST_ACTIVITY",
+        "Analyst activity",
+        `${currentUser.name} changed status to ${newStatus}`
+      );
+    }
   }
 
   async function handleDeleteFeedback(id: string) {
+    if (isViewer) return;
     await feedbackService.deleteFeedback(id);
     setFeedback((prev) => prev.filter((item) => item.id !== id));
     if (selectedFeedback?.id === id) {
@@ -104,11 +159,24 @@ export default function FeedbackPage() {
   }
 
   function handleReclassified(id: string, updatedData: Partial<Feedback>) {
+    if (isViewer) return;
     setFeedback((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...updatedData } : item))
     );
     if (selectedFeedback && selectedFeedback.id === id) {
       setSelectedFeedback((prev) => (prev ? { ...prev, ...updatedData } : null));
+    }
+
+    // Trigger #4: Analyst activity notification
+    const currentUser = authService.getCurrentUser();
+    if (currentUser?.role?.toUpperCase() === "ANALYST") {
+      notificationService.notifyRole(
+        currentUser.workspaceId || "ws_demo",
+        "ADMIN",
+        "ANALYST_ACTIVITY",
+        "Analyst activity",
+        `${currentUser.name} re-classified feedback item`
+      );
     }
   }
 
@@ -118,6 +186,7 @@ export default function FeedbackPage() {
         <FeedbackHeader
           onOpenAddModal={() => setAddModalOpen(true)}
           onOpenCSVModal={() => setCsvModalOpen(true)}
+          isViewer={isViewer}
         />
 
         <FeedbackFilters
@@ -147,6 +216,7 @@ export default function FeedbackPage() {
               onView={handleViewFeedback}
               onStatusChange={handleStatusChange}
               onDelete={handleDeleteFeedback}
+              isViewer={isViewer}
             />
 
             <FeedbackPagination
@@ -161,17 +231,21 @@ export default function FeedbackPage() {
       </div>
 
       {/* Modals & Drawer */}
-      <AddFeedbackModal
-        open={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        onAdd={handleAddSingleFeedback}
-      />
+      {!isViewer && (
+        <>
+          <AddFeedbackModal
+            open={addModalOpen}
+            onClose={() => setAddModalOpen(false)}
+            onAdd={handleAddSingleFeedback}
+          />
 
-      <CSVImportModal
-        open={csvModalOpen}
-        onClose={() => setCsvModalOpen(false)}
-        onImport={handleImportCSV}
-      />
+          <CSVImportModal
+            open={csvModalOpen}
+            onClose={() => setCsvModalOpen(false)}
+            onImport={handleImportCSV}
+          />
+        </>
+      )}
 
       <FeedbackDrawer
         feedback={selectedFeedback}
@@ -183,6 +257,7 @@ export default function FeedbackPage() {
         onStatusChange={handleStatusChange}
         onDelete={handleDeleteFeedback}
         onReclassified={handleReclassified}
+        isViewer={isViewer}
       />
     </>
   );

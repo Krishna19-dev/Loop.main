@@ -122,7 +122,7 @@ export default function CreateWorkspaceModal({
               onChange={(e) =>
                 setOwner(e.target.value)
               }
-              placeholder="Huzaif Hosmani"
+              placeholder="Krishna Choudhary"
               className="w-full rounded-xl border border-loop-border px-4 py-3 outline-none focus:border-sage focus:ring-2 focus:ring-sage-bg"
             />
           </div>

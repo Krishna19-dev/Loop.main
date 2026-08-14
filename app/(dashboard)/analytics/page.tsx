@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { authService } from "@/services/auth.service";
 import { feedbackService } from "@/services/feedback.service";
+import { notificationService } from "@/services/notification.service";
 import { User } from "@/types/auth";
 import { Feedback } from "@/types/feedback";
 
@@ -44,6 +45,29 @@ export default function AnalyticsPage() {
         // Refresh feedbacks to pick up clustered themes
         const updatedList = await feedbackService.getFeedback();
         setFeedbacks(updatedList);
+
+        const workspaceId = currentUser?.workspaceId || "ws_demo";
+        const roleUpper = currentUser?.role?.toUpperCase();
+
+        if (roleUpper === "ADMIN") {
+          // Trigger #3: Admin changes theme/classification settings -> Notify ANALYST (DO NOT notify ADMIN)
+          notificationService.notifyRole(
+            workspaceId,
+            "ANALYST",
+            "THEME_SETTINGS_CHANGED",
+            "Classification settings updated",
+            `${currentUser?.name || "Admin"} updated theme settings`
+          );
+        } else if (roleUpper === "ANALYST") {
+          // Trigger #4: Analyst activity -> Notify ADMIN
+          notificationService.notifyRole(
+            workspaceId,
+            "ADMIN",
+            "ANALYST_ACTIVITY",
+            "Analyst activity",
+            `${currentUser?.name || "Analyst"} re-clustered AI themes`
+          );
+        }
       }
     } catch (err) {
       console.warn("[AI Recluster Error]", err);

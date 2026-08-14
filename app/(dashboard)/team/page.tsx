@@ -15,6 +15,7 @@ import EditMemberModal from "@/components/team/EditMemberModal";
 import { TeamMember } from "@/types/team";
 import { teamService } from "@/services/team.service";
 import { authService } from "@/services/auth.service";
+import { notificationService } from "@/services/notification.service";
 
 export default function TeamPage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -86,14 +87,13 @@ export default function TeamPage() {
     const tempPassword = data.password || "password123";
 
     // 1. Create record in team table
-    const newMember =
-      await teamService.createMember({
-        name: data.name,
-        email: data.email,
-        workspace: data.workspace,
-        role: data.role,
-        status: "Active",
-      });
+    const newMember = await teamService.createMember({
+      name: data.name,
+      email: data.email,
+      workspace: data.workspace,
+      role: data.role,
+      status: "Active",
+    });
 
     // 2. Register account credentials in authService so user can sign in at /login
     try {
@@ -107,6 +107,37 @@ export default function TeamPage() {
     } catch (err) {
       console.log("Auth user creation note:", err);
     }
+
+    // Trigger Notifications for Admin, Analyst, and New User
+    const currentUser = authService.getCurrentUser();
+    const workspaceId = currentUser?.workspaceId || "ws_demo";
+
+    // 1. Notify Analyst role
+    notificationService.notifyRole(
+      workspaceId,
+      "ANALYST",
+      "TEAM_MEMBER_ADDED",
+      "New team member added",
+      `${newMember.name} joined as ${newMember.role}`
+    );
+
+    // 2. Notify Admin confirmation
+    notificationService.notifyRole(
+      workspaceId,
+      "ADMIN",
+      "TEAM_MEMBER_ADDED",
+      "Team member added",
+      `Added ${newMember.name} as ${newMember.role}`
+    );
+
+    // 3. Separately notify the new user with a welcome message
+    notificationService.notifyUser(
+      workspaceId,
+      newMember.id,
+      "WELCOME",
+      "Welcome to LOOP!",
+      "Your account is ready — explore feedback, themes, and Ask LOOP."
+    );
 
     setMembers((prev) => [
       newMember,
@@ -130,11 +161,54 @@ export default function TeamPage() {
       setMembers((prev) =>
         prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
       );
+
+      // Trigger Notifications for Admin, Analyst, and Affected User on member edit
+      const currentUser = authService.getCurrentUser();
+      const workspaceId = currentUser?.workspaceId || "ws_demo";
+
+      if (updatedData.role) {
+        // 1. Notify Analyst role
+        notificationService.notifyRole(
+          workspaceId,
+          "ANALYST",
+          "ROLE_CHANGED",
+          "Team role updated",
+          `${updated.name}'s role changed to ${updatedData.role}`
+        );
+
+        // 2. Notify Admin confirmation
+        notificationService.notifyRole(
+          workspaceId,
+          "ADMIN",
+          "ROLE_CHANGED",
+          "Member role updated",
+          `Updated ${updated.name}'s role to ${updatedData.role}`
+        );
+
+        // 3. Notify the affected user specifically
+        notificationService.notifyUser(
+          workspaceId,
+          id,
+          "ROLE_CHANGED",
+          "Your role changed",
+          `Your role is now ${updatedData.role}`
+        );
+      } else {
+        // Notify Admin for general profile edit
+        notificationService.notifyRole(
+          workspaceId,
+          "ADMIN",
+          "TEAM_MEMBER_ADDED",
+          "Member details updated",
+          `Updated information for ${updated.name}`
+        );
+      }
     }
   }
 
   async function handleDelete(member: TeamMember) {
     await teamService.deleteMember(member.id);
+    authService.deleteUser(member.id);
 
     setMembers((prev) =>
       prev.filter((item) => item.id !== member.id)

@@ -8,6 +8,7 @@ export interface User {
   role: Role;
   workspaceId: string;
   status?: "Active" | "Inactive";
+  hasSeenWelcome?: boolean;
 }
 
 export interface Workspace {

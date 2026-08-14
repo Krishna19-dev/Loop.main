@@ -63,12 +63,18 @@ export default function AskLoopPage() {
 
       // Auto-update session title with concise 2-3 words title if it's a new chat
       const currentSession = sessions.find((s) => s.id === selectedChat);
-      if (currentSession && (currentSession.title === "New Conversation" || currentSession.title === "Customer Feedback Summary")) {
+      if (
+        currentSession &&
+        (currentSession.title === "New Conversation" ||
+          currentSession.title === "New Chat" ||
+          currentSession.title === "Customer Feedback Summary" ||
+          currentSession.title.startsWith("New"))
+      ) {
         const shortTitle = chatService.generateShortTitle(messageText);
         const updatedSessions = sessions.map((s) =>
           s.id === selectedChat ? { ...s, title: shortTitle, updatedAt: "Just now" } : s
         );
-        setSessions(updatedSessions);
+        setSessions([...updatedSessions]);
         chatService.saveSessions(updatedSessions);
       }
     } finally {
@@ -83,7 +89,7 @@ export default function AskLoopPage() {
   function handleNewChat() {
     const newSession = chatService.createSession();
     const allSessions = chatService.getSessions();
-    setSessions(allSessions);
+    setSessions([...allSessions]);
     setSelectedChat(newSession.id);
     const msgs = chatService.getSessionMessages(newSession.id);
     setMessages(msgs);

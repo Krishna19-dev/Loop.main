@@ -8,6 +8,7 @@ interface FeedbackTableProps {
   onView: (feedback: Feedback) => void;
   onStatusChange: (id: string, status: FeedbackStatus) => void;
   onDelete: (id: string) => void;
+  isViewer?: boolean;
 }
 
 export default function FeedbackTable({
@@ -15,6 +16,7 @@ export default function FeedbackTable({
   onView,
   onStatusChange,
   onDelete,
+  isViewer = false,
 }: FeedbackTableProps) {
   return (
     <div className="overflow-hidden rounded-2xl border border-loop-border bg-white shadow-sm">
@@ -27,7 +29,7 @@ export default function FeedbackTable({
               <th className="px-6 py-4">Category</th>
               <th className="px-6 py-4 text-center">Rating</th>
               <th className="px-6 py-4">Sentiment</th>
-              <th className="px-6 py-4">Status Control</th>
+              <th className="px-6 py-4">{isViewer ? "Status" : "Status Control"}</th>
               <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4">Actions</th>
             </tr>
@@ -41,6 +43,7 @@ export default function FeedbackTable({
                 onView={onView}
                 onStatusChange={onStatusChange}
                 onDelete={onDelete}
+                isViewer={isViewer}
               />
             ))}
           </tbody>

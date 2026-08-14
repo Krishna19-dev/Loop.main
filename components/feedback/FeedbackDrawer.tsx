@@ -13,6 +13,7 @@ interface FeedbackDrawerProps {
   onStatusChange: (id: string, status: FeedbackStatus) => void;
   onDelete: (id: string) => void;
   onReclassified?: (id: string, updatedData: Partial<Feedback>) => void;
+  isViewer?: boolean;
 }
 
 export default function FeedbackDrawer({
@@ -22,6 +23,7 @@ export default function FeedbackDrawer({
   onStatusChange,
   onDelete,
   onReclassified,
+  isViewer: isViewerProp,
 }: FeedbackDrawerProps) {
   const [isClassifying, setIsClassifying] = useState(false);
   const [classifyError, setClassifyError] = useState("");
@@ -30,7 +32,7 @@ export default function FeedbackDrawer({
   if (!open || !feedback) return null;
 
   const currentUser = authService.getCurrentUser();
-  const isViewer = currentUser?.role === "VIEWER";
+  const isViewer = isViewerProp ?? (currentUser?.role?.toUpperCase() === "VIEWER");
 
   async function handleReclassify() {
     if (!feedback) return;
@@ -146,15 +148,21 @@ export default function FeedbackDrawer({
               <p className="text-xs font-bold uppercase tracking-wider text-taupe mb-2">
                 Status
               </p>
-              <select
-                value={feedback.status}
-                onChange={(e) => onStatusChange(feedback.id, e.target.value as FeedbackStatus)}
-                className="w-full rounded-xl border border-loop-border bg-white p-2.5 text-xs font-semibold text-forest outline-none focus:border-forest"
-              >
-                <option value="Pending">🟡 Pending</option>
-                <option value="Reviewed">🔵 Reviewed</option>
-                <option value="Resolved">🟢 Resolved</option>
-              </select>
+              {isViewer ? (
+                <span className="w-full inline-block rounded-xl border border-loop-border bg-cream/30 p-2.5 text-xs font-semibold text-forest">
+                  {feedback.status === "Pending" ? "🟡 Pending" : feedback.status === "Reviewed" ? "🔵 Reviewed" : "🟢 Resolved"}
+                </span>
+              ) : (
+                <select
+                  value={feedback.status}
+                  onChange={(e) => onStatusChange(feedback.id, e.target.value as FeedbackStatus)}
+                  className="w-full rounded-xl border border-loop-border bg-white p-2.5 text-xs font-semibold text-forest outline-none focus:border-forest"
+                >
+                  <option value="Pending">🟡 Pending</option>
+                  <option value="Reviewed">🔵 Reviewed</option>
+                  <option value="Resolved">🟢 Resolved</option>
+                </select>
+              )}
             </div>
 
             <div>
@@ -255,15 +263,17 @@ export default function FeedbackDrawer({
                 <span>AI Automated Insight (Gemini)</span>
               </div>
 
-              <button
-                type="button"
-                onClick={handleReclassify}
-                disabled={isClassifying}
-                className="flex items-center gap-1 text-xs font-bold text-forest hover:text-emerald-700 transition disabled:opacity-50"
-              >
-                <RefreshCw size={13} className={isClassifying ? "animate-spin" : ""} />
-                <span>{isClassifying ? "Classifying..." : "Re-classify with Gemini"}</span>
-              </button>
+              {!isViewer && (
+                <button
+                  type="button"
+                  onClick={handleReclassify}
+                  disabled={isClassifying}
+                  className="flex items-center gap-1 text-xs font-bold text-forest hover:text-emerald-700 transition disabled:opacity-50"
+                >
+                  <RefreshCw size={13} className={isClassifying ? "animate-spin" : ""} />
+                  <span>{isClassifying ? "Classifying..." : "Re-classify with Gemini"}</span>
+                </button>
+              )}
             </div>
 
             <div className="rounded-2xl bg-sage-bg/60 border border-sage/20 p-4 text-xs leading-relaxed text-forest-mid">
@@ -284,16 +294,20 @@ export default function FeedbackDrawer({
 
         {/* Footer Actions */}
         <div className="border-t border-loop-border p-4 bg-cream flex items-center justify-between">
-          <button
-            onClick={() => {
-              onDelete(feedback.id);
-              onClose();
-            }}
-            className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-600 hover:text-white transition"
-          >
-            <Trash2 size={16} />
-            Delete Entry
-          </button>
+          {!isViewer ? (
+            <button
+              onClick={() => {
+                onDelete(feedback.id);
+                onClose();
+              }}
+              className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-600 hover:text-white transition"
+            >
+              <Trash2 size={16} />
+              Delete Entry
+            </button>
+          ) : (
+            <div />
+          )}
 
           <button
             onClick={onClose}

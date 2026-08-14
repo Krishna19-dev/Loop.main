@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { SystemMetricsSection } from "@/components/landing/SystemMetricsSection";
 import { TrustSection } from "@/components/landing/TrustSection";
 import { CtaSection } from "@/components/landing/CtaSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
@@ -32,10 +33,13 @@ export default function HomePage() {
         {/* 4. Features Grid */}
         <FeaturesSection />
 
-        {/* 5. Multi-tenant & Security Trust Strip */}
+        {/* 5. High-Performance Infrastructure & System Capacity Metrics */}
+        <SystemMetricsSection />
+
+        {/* 6. Multi-tenant & Security Trust Strip */}
         <TrustSection />
 
-        {/* 6. Final CTA Section */}
+        {/* 7. Final CTA Section */}
         <CtaSection />
       </main>
 

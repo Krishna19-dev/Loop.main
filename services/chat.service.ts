@@ -1,4 +1,5 @@
 import { ChatMessage, ChatSession, SendMessageResponse } from "@/types/chat";
+import { authService } from "@/services/auth.service";
 
 const DEFAULT_SESSIONS: ChatSession[] = [
   {
@@ -109,14 +110,21 @@ const DEFAULT_MESSAGES: Record<string, ChatMessage[]> = {
 };
 
 class ChatService {
-  private sessionsKey = "loop_chat_sessions_v2";
-  private messagesKey = "loop_chat_messages_v2";
+  private getStorageKeys(): { sessionsKey: string; messagesKey: string } {
+    const user = authService.getCurrentUser();
+    const userId = user?.id || "guest";
+    return {
+      sessionsKey: `loop_chat_sessions_v3_${userId}`,
+      messagesKey: `loop_chat_messages_v3_${userId}`,
+    };
+  }
 
   getSessions(): ChatSession[] {
     if (typeof window === "undefined") return DEFAULT_SESSIONS;
-    const stored = localStorage.getItem(this.sessionsKey);
+    const { sessionsKey } = this.getStorageKeys();
+    const stored = localStorage.getItem(sessionsKey);
     if (!stored) {
-      localStorage.setItem(this.sessionsKey, JSON.stringify(DEFAULT_SESSIONS));
+      localStorage.setItem(sessionsKey, JSON.stringify(DEFAULT_SESSIONS));
       return DEFAULT_SESSIONS;
     }
     try {
@@ -128,15 +136,17 @@ class ChatService {
 
   saveSessions(sessions: ChatSession[]): void {
     if (typeof window !== "undefined") {
-      localStorage.setItem(this.sessionsKey, JSON.stringify(sessions));
+      const { sessionsKey } = this.getStorageKeys();
+      localStorage.setItem(sessionsKey, JSON.stringify(sessions));
     }
   }
 
   getSessionMessages(sessionId: string): ChatMessage[] {
     if (typeof window === "undefined") return DEFAULT_MESSAGES[sessionId] || [];
-    const stored = localStorage.getItem(this.messagesKey);
+    const { messagesKey } = this.getStorageKeys();
+    const stored = localStorage.getItem(messagesKey);
     if (!stored) {
-      localStorage.setItem(this.messagesKey, JSON.stringify(DEFAULT_MESSAGES));
+      localStorage.setItem(messagesKey, JSON.stringify(DEFAULT_MESSAGES));
       return DEFAULT_MESSAGES[sessionId] || [];
     }
     try {
@@ -149,7 +159,8 @@ class ChatService {
 
   saveSessionMessages(sessionId: string, messages: ChatMessage[]): void {
     if (typeof window === "undefined") return;
-    const stored = localStorage.getItem(this.messagesKey);
+    const { messagesKey } = this.getStorageKeys();
+    const stored = localStorage.getItem(messagesKey);
     let allMsgMap: Record<string, ChatMessage[]> = {};
     if (stored) {
       try {
@@ -161,20 +172,20 @@ class ChatService {
       allMsgMap = { ...DEFAULT_MESSAGES };
     }
     allMsgMap[sessionId] = messages;
-    localStorage.setItem(this.messagesKey, JSON.stringify(allMsgMap));
+    localStorage.setItem(messagesKey, JSON.stringify(allMsgMap));
   }
 
   createSession(title?: string): ChatSession {
     const sessions = this.getSessions();
     const newSession: ChatSession = {
-      id: crypto.randomUUID(),
+      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
       title: title || "New Conversation",
       updatedAt: "Just now",
     };
     const updatedSessions = [newSession, ...sessions];
     this.saveSessions(updatedSessions);
 
-    // Empty initial messages so prompt suggestions empty state is displayed!
+    // Empty initial messages for the new chat session
     this.saveSessionMessages(newSession.id, []);
 
     return newSession;
@@ -247,7 +258,7 @@ class ChatService {
       console.error("[ChatService Error]", err);
       return {
         reply: {
-          id: crypto.randomUUID(),
+          id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
           role: "assistant",
           content: err instanceof Error ? `Error: ${err.message}` : "An unexpected error occurred while querying Ask LOOP.",
           createdAt: new Date().toLocaleTimeString([], {

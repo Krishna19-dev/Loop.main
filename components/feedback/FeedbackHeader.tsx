@@ -5,11 +5,13 @@ import { Plus, UploadCloud } from "lucide-react";
 interface FeedbackHeaderProps {
   onOpenAddModal: () => void;
   onOpenCSVModal: () => void;
+  isViewer?: boolean;
 }
 
 export default function FeedbackHeader({
   onOpenAddModal,
   onOpenCSVModal,
+  isViewer = false,
 }: FeedbackHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -18,41 +20,45 @@ export default function FeedbackHeader({
           Feedback Management
         </h1>
         <p className="mt-2 text-base md:text-lg text-taupe">
-          Monitor customer feedback, ingest new entries, and manage response statuses.
+          {isViewer
+            ? "Monitor customer feedback stream, search trends, and view insights (Read-Only)."
+            : "Monitor customer feedback, ingest new entries, and manage response statuses."}
         </p>
       </div>
 
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onOpenCSVModal}
-          className="
-            inline-flex items-center gap-2 rounded-xl
-            border border-loop-border bg-white
-            px-4 py-2.5
-            text-sm font-semibold text-forest
-            shadow-sm transition-all
-            hover:bg-cream hover:border-forest/30
-          "
-        >
-          <UploadCloud size={18} />
-          Import CSV
-        </button>
+      {!isViewer && (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onOpenCSVModal}
+            className="
+              inline-flex items-center gap-2 rounded-xl
+              border border-loop-border bg-white
+              px-4 py-2.5
+              text-sm font-semibold text-forest
+              shadow-sm transition-all
+              hover:bg-cream hover:border-forest/30
+            "
+          >
+            <UploadCloud size={18} />
+            Import CSV
+          </button>
 
-        <button
-          onClick={onOpenAddModal}
-          className="
-            inline-flex items-center gap-2 rounded-xl
-            bg-forest text-champagne border border-forest-light
-            px-5 py-2.5
-            text-sm font-semibold
-            shadow-md transition-all
-            hover:bg-forest-light hover:text-white hover:shadow-lg
-          "
-        >
-          <Plus size={18} />
-          Add Feedback
-        </button>
-      </div>
+          <button
+            onClick={onOpenAddModal}
+            className="
+              inline-flex items-center gap-2 rounded-xl
+              bg-forest text-champagne border border-forest-light
+              px-5 py-2.5
+              text-sm font-semibold
+              shadow-md transition-all
+              hover:bg-forest-light hover:text-white hover:shadow-lg
+            "
+          >
+            <Plus size={18} />
+            Add Feedback
+          </button>
+        </div>
+      )}
     </div>
   );
 }

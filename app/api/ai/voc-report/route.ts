@@ -11,12 +11,7 @@ export async function POST(req: NextRequest) {
     const headerRole = req.headers.get("x-user-role");
     const role = user?.role || headerRole || "ADMIN";
 
-    if (role === "VIEWER") {
-      return NextResponse.json(
-        { error: "Forbidden: VIEWER role cannot generate VoC reports." },
-        { status: 403 }
-      );
-    }
+    // All roles (Admin, Analyst, Viewer) can generate VoC reports!
 
     // 1. Fetch live feedback records
     const allFeedbacks = await feedbackService.getFeedback();

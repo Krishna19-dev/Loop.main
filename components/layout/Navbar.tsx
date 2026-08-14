@@ -4,9 +4,26 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { feedbackService } from "@/services/feedback.service";
+import { notificationService } from "@/services/notification.service";
 import { User } from "@/types/auth";
 import { Feedback } from "@/types/feedback";
-import { LogOut, LogIn, ChevronDown, Bell, Search, Plus, Star, X } from "lucide-react";
+import { NotificationItem as StoredNotificationItem } from "@/types/notification";
+import {
+  LogOut,
+  LogIn,
+  ChevronDown,
+  Bell,
+  Search,
+  Plus,
+  Star,
+  X,
+  FileText,
+  User as UserIcon,
+  CheckCheck,
+  Sparkles,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import AddFeedbackModal from "@/components/feedback/AddFeedbackModal";
 
 interface NavbarProps {
@@ -16,12 +33,30 @@ interface NavbarProps {
 export default function Navbar({ user }: NavbarProps) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationsList, setNotificationsList] = useState<StoredNotificationItem[]>([]);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
 
   const currentUser = user || authService.getCurrentUser();
+
+  // Load and subscribe to real-time notification updates
+  useEffect(() => {
+    if (!currentUser) return;
+
+    function syncNotifications() {
+      const list = notificationService.getNotificationsForUser(currentUser);
+      setNotificationsList(list);
+    }
+
+    syncNotifications();
+    window.addEventListener("loop_notifications_updated", syncNotifications);
+    return () => {
+      window.removeEventListener("loop_notifications_updated", syncNotifications);
+    };
+  }, [currentUser]);
 
   useEffect(() => {
     async function loadData() {
@@ -30,6 +65,11 @@ export default function Navbar({ user }: NavbarProps) {
     }
     loadData();
   }, [addModalOpen]);
+
+  const unreadCount = useMemo(
+    () => notificationsList.filter((n) => !n.read).length,
+    [notificationsList]
+  );
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -53,7 +93,6 @@ export default function Navbar({ user }: NavbarProps) {
   async function handleAddFeedback(data: Omit<Feedback, "id">) {
     await feedbackService.createFeedback(data);
     setAddModalOpen(false);
-    // Refresh page / router to update active components
     router.refresh();
     window.location.reload();
   }
@@ -63,6 +102,43 @@ export default function Navbar({ user }: NavbarProps) {
     if (searchQuery.trim()) {
       router.push(`/feedback?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchFocused(false);
+    }
+  }
+
+  function handleMarkAllRead() {
+    notificationService.markAllAsReadForUser(currentUser);
+    setNotificationsList((prev) => prev.map((n) => ({ ...n, read: true })));
+  }
+
+  function handleDeleteNotification(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    notificationService.deleteNotification(id);
+    setNotificationsList((prev) => prev.filter((n) => n.id !== id));
+  }
+
+  function handleNotificationClick(item: StoredNotificationItem) {
+    notificationService.markAsRead(item.id);
+    setNotificationsList((prev) =>
+      prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
+    );
+    setNotificationsOpen(false);
+
+    // Route target navigation
+    if (item.type === "WELCOME") {
+      // Welcome message directly opens Dashboard!
+      router.push("/dashboard");
+    } else if (item.type === "TEAM_MEMBER_ADDED" || item.type === "ROLE_CHANGED") {
+      router.push("/team");
+    } else if (item.type === "THEME_SETTINGS_CHANGED") {
+      router.push("/analytics");
+    } else if (item.type === "ANALYST_ACTIVITY" || item.type === "VIEWER_ACTIVITY") {
+      if (item.message.toLowerCase().includes("report")) {
+        router.push("/reports");
+      } else {
+        router.push("/feedback");
+      }
+    } else {
+      router.push("/feedback");
     }
   }
 
@@ -128,7 +204,7 @@ export default function Navbar({ user }: NavbarProps) {
                       }}
                       className="flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition hover:bg-slate-50"
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-800 text-xs font-bold text-white">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-forest text-xs font-bold text-champagne">
                         {item.customer.charAt(0)}
                       </div>
                       <div className="flex-1 overflow-hidden">
@@ -163,17 +239,161 @@ export default function Navbar({ user }: NavbarProps) {
             })}
           </span>
 
-          {/* Notifications */}
-          <button
-            className="relative flex h-9 w-9 items-center justify-center rounded-lg border transition"
-            style={{ borderColor: "#E7DDD0", color: "#8A7E72" }}
-          >
-            <Bell className="h-4 w-4" />
-            <span
-              className="absolute right-2 top-2 h-2 w-2 rounded-full"
-              style={{ background: "#B85C3C" }}
-            />
-          </button>
+          {/* Notifications Bell Button & Popover */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setNotificationsOpen(!notificationsOpen);
+                setDropdownOpen(false);
+              }}
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg border transition hover:bg-cream"
+              style={{ borderColor: "#E7DDD0", color: "#8A7E72" }}
+              title="Notifications"
+            >
+              <Bell className="h-4 w-4 text-forest" />
+              {unreadCount > 0 && (
+                <span
+                  className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-xs"
+                  style={{ background: "#B85C3C" }}
+                >
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notifications Dropdown Panel */}
+            {notificationsOpen && (
+              <div className="absolute right-0 z-50 mt-2.5 w-80 md:w-96 rounded-2xl border bg-white p-4 shadow-2xl border-loop-border animate-in fade-in zoom-in-95 duration-150">
+                {/* Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-loop-border">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-forest">Notifications</span>
+                    {unreadCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F5DDD5] text-[#B85C3C]">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </div>
+
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-taupe hover:text-forest transition"
+                    >
+                      <CheckCheck size={13} className="text-sage" />
+                      <span>Mark read</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Notifications List */}
+                <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto py-1">
+                  {notificationsList.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-taupe">
+                      No notifications yet.
+                    </div>
+                  ) : (
+                    notificationsList.map((item) => {
+                      return (
+                        <div
+                          key={item.id}
+                          className={`group flex items-start justify-between gap-2 p-3 transition rounded-xl my-1 ${
+                            !item.read
+                              ? "bg-[#F9F6EF]/80 font-medium"
+                              : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleNotificationClick(item)}
+                            className="flex flex-1 items-start gap-3 text-left overflow-hidden"
+                          >
+                            {/* Icon based on type */}
+                            <div className="shrink-0 mt-0.5">
+                              {item.type === "ANALYST_ACTIVITY" && (
+                                <div className="rounded-lg p-2 bg-[#F3E8D4] text-[#5C4A2A]">
+                                  <FileText size={15} />
+                                </div>
+                              )}
+                              {item.type === "VIEWER_ACTIVITY" && (
+                                <div className="rounded-lg p-2 bg-slate-100 text-forest">
+                                  <UserIcon size={15} />
+                                </div>
+                              )}
+                              {item.type === "TEAM_MEMBER_ADDED" && (
+                                <div className="rounded-lg p-2 bg-[#D8EBD9] text-[#6B8F71]">
+                                  <UserIcon size={15} />
+                                </div>
+                              )}
+                              {item.type === "ROLE_CHANGED" && (
+                                <div className="rounded-lg p-2 bg-[#F5DDD5] text-[#B85C3C]">
+                                  <ShieldCheck size={15} />
+                                </div>
+                              )}
+                              {item.type === "THEME_SETTINGS_CHANGED" && (
+                                <div className="rounded-lg p-2 bg-amber-100 text-amber-800">
+                                  <Sparkles size={15} />
+                                </div>
+                              )}
+                              {item.type === "WELCOME" && (
+                                <div className="rounded-lg p-2 bg-[#E8C98F] text-[#0F3028]">
+                                  <Sparkles size={15} />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Text Content */}
+                            <div className="flex-1 overflow-hidden">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs font-bold text-forest truncate">
+                                  {item.title}
+                                </p>
+                                <span className="text-[10px] text-taupe shrink-0">
+                                  {item.createdAt}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-600 mt-0.5 line-clamp-2 leading-relaxed">
+                                {item.message}
+                              </p>
+                            </div>
+                          </button>
+
+                          {/* Action Items: Unread Indicator + Dismiss Cross (X) Button */}
+                          <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                            {!item.read && (
+                              <div className="w-2 h-2 rounded-full bg-[#B85C3C] shrink-0" />
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteNotification(item.id, e)}
+                              title="Dismiss notification"
+                              className="rounded-md p-1 text-slate-400 opacity-60 hover:opacity-100 hover:bg-slate-200 hover:text-slate-700 transition"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Footer Link */}
+                <div className="pt-2 border-t border-loop-border text-center">
+                  <button
+                    onClick={() => {
+                      setNotificationsOpen(false);
+                      router.push("/feedback");
+                    }}
+                    className="text-xs font-bold text-forest hover:text-[#5C4A2A] transition"
+                  >
+                    View Feedback Intelligence Stream →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* + Add Feedback Button */}
           <button
@@ -188,7 +408,10 @@ export default function Navbar({ user }: NavbarProps) {
           {/* User Dropdown */}
           <div className="relative">
             <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
+              onClick={() => {
+                setDropdownOpen(!dropdownOpen);
+                setNotificationsOpen(false);
+              }}
               className="flex items-center gap-2.5 rounded-lg border px-2 py-1.5 transition"
               style={{ borderColor: "#E7DDD0" }}
             >

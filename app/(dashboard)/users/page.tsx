@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { authService } from "@/services/auth.service";
+import { notificationService } from "@/services/notification.service";
 import { User, Role } from "@/types/auth";
 import {
   Users,
@@ -93,12 +94,20 @@ function AddUserModal({ open, onClose, onAdd }: AddUserModalProps) {
       setError("All fields are required.");
       return;
     }
-    onAdd({ name, email, password, role });
-    setName("");
-    setEmail("");
-    setPassword("");
-    setRole("VIEWER");
-    onClose();
+    try {
+      onAdd({ name, email, password, role });
+      setName("");
+      setEmail("");
+      setPassword("");
+      setRole("VIEWER");
+      onClose();
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to create user.");
+      }
+    }
   }
 
   if (!open) return null;
@@ -274,21 +283,49 @@ export default function UsersPage() {
     password: string;
     role: Role;
   }) {
-    try {
-      const newUser = authService.createUser(
-        data.name,
-        data.email,
-        data.password,
-        data.role
-      );
-      setUsers((prev) => [newUser, ...prev]);
-    } catch (err) {
-      console.error("Failed to add user:", err);
-    }
+    const newUser = authService.createUser(
+      data.name,
+      data.email,
+      data.password,
+      data.role
+    );
+    setUsers((prev) => [newUser, ...prev]);
+
+    // Trigger Notifications for Admin, Analyst, and New User
+    const currentUser = authService.getCurrentUser();
+    const workspaceId = currentUser?.workspaceId || "ws_demo";
+    const displayRole = data.role.charAt(0).toUpperCase() + data.role.slice(1).toLowerCase();
+
+    // 1. Notify Analyst role
+    notificationService.notifyRole(
+      workspaceId,
+      "ANALYST",
+      "TEAM_MEMBER_ADDED",
+      "New team member added",
+      `${newUser.name} joined as ${displayRole}`
+    );
+
+    // 2. Notify Admin confirmation
+    notificationService.notifyRole(
+      workspaceId,
+      "ADMIN",
+      "TEAM_MEMBER_ADDED",
+      "User created successfully",
+      `Created ${newUser.name} as ${displayRole}`
+    );
+
+    // 3. Separately notify the new user with a welcome message
+    notificationService.notifyUser(
+      workspaceId,
+      newUser.id,
+      "WELCOME",
+      "Welcome to LOOP!",
+      "Your account is ready — explore feedback, themes, and dashboard insights."
+    );
   }
 
   function handleDelete(user: User) {
-    // Remove from local UI state (localStorage persistence not scoped here)
+    authService.deleteUser(user.id);
     setUsers((prev) => prev.filter((u) => u.id !== user.id));
   }
 
@@ -424,6 +461,7 @@ export default function UsersPage() {
                 <tr className="text-left text-sm font-semibold text-slate-600">
                   <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Role</th>
+                  <th className="px-6 py-4">Password</th>
                   <th className="px-6 py-4">Workspace ID</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-center">Actions</th>
@@ -467,6 +505,13 @@ export default function UsersPage() {
                       {/* Role */}
                       <td className="px-6 py-5">
                         <RoleBadge role={user.role} />
+                      </td>
+
+                      {/* Password */}
+                      <td className="px-6 py-5">
+                        <code className="rounded-md bg-amber-50 border border-amber-200/60 px-2 py-1 text-xs font-mono font-bold text-amber-900">
+                          {user.password || "password123"}
+                        </code>
                       </td>
 
                       {/* Workspace */}

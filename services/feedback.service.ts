@@ -1,38 +1,53 @@
-import { feedbacks } from "@/data/feedback";
+import { feedbacks as SEED_FEEDBACKS } from "@/data/feedback";
 import { Feedback } from "@/types/feedback";
 import { classifyFeedbackWithGemini } from "@/lib/ai";
 
 class FeedbackService {
-  async getFeedback(): Promise<Feedback[]> {
-    // Future:
-    // const response = await fetch("/api/feedback");
-    // return response.json();
+  private storageKey = "loop_feedbacks_v2";
 
-    return Promise.resolve([...feedbacks]);
+  private getStoredFeedback(): Feedback[] {
+    if (typeof window === "undefined") return SEED_FEEDBACKS;
+
+    const stored = localStorage.getItem(this.storageKey);
+    if (!stored) {
+      localStorage.setItem(this.storageKey, JSON.stringify(SEED_FEEDBACKS));
+      return SEED_FEEDBACKS;
+    }
+
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return SEED_FEEDBACKS;
+    }
   }
 
-  async getFeedbackById(
-    id: string
-  ): Promise<Feedback | undefined> {
-    // Future:
-    // const response = await fetch(`/api/feedback/${id}`);
-    // return response.json();
+  private saveFeedback(list: Feedback[]): void {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(this.storageKey, JSON.stringify(list));
+      window.dispatchEvent(new Event("loop_feedback_updated"));
+    }
+  }
 
-    return Promise.resolve(
-      feedbacks.find((item) => item.id === id)
-    );
+  async getFeedback(): Promise<Feedback[]> {
+    return Promise.resolve(this.getStoredFeedback());
+  }
+
+  async getFeedbackById(id: string): Promise<Feedback | undefined> {
+    const list = this.getStoredFeedback();
+    return Promise.resolve(list.find((item) => item.id === id));
   }
 
   async createFeedback(
     feedback: Omit<Feedback, "id">,
     autoClassify: boolean = true
   ): Promise<Feedback> {
+    const list = this.getStoredFeedback();
     let classificationData: Partial<Feedback> = {};
 
     if (autoClassify && feedback.message) {
       try {
         const existingThemes = Array.from(
-          new Set(feedbacks.map((f) => f.category).filter(Boolean))
+          new Set(list.map((f) => f.category).filter(Boolean))
         );
         const classification = await classifyFeedbackWithGemini(
           feedback.message,
@@ -55,11 +70,11 @@ class FeedbackService {
     const newFeedback: Feedback = {
       ...feedback,
       ...classificationData,
-      id: crypto.randomUUID(),
+      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
     };
 
-    feedbacks.unshift(newFeedback);
-
+    const updated = [newFeedback, ...list];
+    this.saveFeedback(updated);
     return Promise.resolve(newFeedback);
   }
 
@@ -67,39 +82,32 @@ class FeedbackService {
     id: string,
     data: Partial<Feedback>
   ): Promise<Feedback | undefined> {
-    // Future:
-    // PUT /api/feedback/:id
+    const list = this.getStoredFeedback();
+    const index = list.findIndex((item) => item.id === id);
 
-    const feedback = feedbacks.find(
-      (item) => item.id === id
-    );
-
-    if (!feedback) {
+    if (index === -1) {
       return Promise.resolve(undefined);
     }
 
-    Object.assign(feedback, data);
+    list[index] = {
+      ...list[index],
+      ...data,
+    };
 
-    return Promise.resolve(feedback);
+    this.saveFeedback(list);
+    return Promise.resolve(list[index]);
   }
 
-  async deleteFeedback(
-    id: string
-  ): Promise<boolean> {
-    // Future:
-    // DELETE /api/feedback/:id
+  async deleteFeedback(id: string): Promise<boolean> {
+    const list = this.getStoredFeedback();
+    const filtered = list.filter((item) => item.id !== id);
 
-    const index = feedbacks.findIndex(
-      (item) => item.id === id
-    );
-
-    if (index === -1) {
-      return Promise.resolve(false);
+    if (filtered.length !== list.length) {
+      this.saveFeedback(filtered);
+      return Promise.resolve(true);
     }
 
-    feedbacks.splice(index, 1);
-
-    return Promise.resolve(true);
+    return Promise.resolve(false);
   }
 }
 

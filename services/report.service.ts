@@ -1,34 +1,48 @@
-import { reports } from "@/data/reports";
+import { reports as SEED_REPORTS } from "@/data/reports";
 import { Report } from "@/types/report";
 
 class ReportService {
-  async getReports(): Promise<Report[]> {
-    // Later:
-    // const response = await fetch("/api/reports");
-    // return response.json();
+  private storageKey = "loop_reports_v4";
 
-    return Promise.resolve(reports);
+  private getStoredReports(): Report[] {
+    if (typeof window === "undefined") return SEED_REPORTS;
+
+    const stored = localStorage.getItem(this.storageKey);
+    if (!stored) {
+      localStorage.setItem(this.storageKey, JSON.stringify(SEED_REPORTS));
+      return SEED_REPORTS;
+    }
+
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return SEED_REPORTS;
+    }
+  }
+
+  private saveReports(list: Report[]): void {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(this.storageKey, JSON.stringify(list));
+    }
+  }
+
+  async getReports(): Promise<Report[]> {
+    return Promise.resolve(this.getStoredReports());
   }
 
   async getReportById(id: string): Promise<Report | undefined> {
-    // Later:
-    // const response = await fetch(`/api/reports/${id}`);
-    // return response.json();
-
-    return Promise.resolve(
-      reports.find((report) => report.id === id)
-    );
+    const list = this.getStoredReports();
+    return Promise.resolve(list.find((report) => report.id === id));
   }
 
   async generateReport(
     report: Omit<Report, "id" | "createdAt">
   ): Promise<Report> {
-    // Later:
-    // POST /api/reports
+    const list = this.getStoredReports();
 
     const newReport: Report = {
       ...report,
-      id: crypto.randomUUID(),
+      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
       createdAt: new Date().toLocaleDateString("en-US", {
         day: "2-digit",
         month: "short",
@@ -36,21 +50,17 @@ class ReportService {
       }),
     };
 
-    reports.unshift(newReport);
-
+    const updated = [newReport, ...list];
+    this.saveReports(updated);
     return Promise.resolve(newReport);
   }
 
   async deleteReport(id: string): Promise<boolean> {
-    // Later:
-    // DELETE /api/reports/:id
+    const list = this.getStoredReports();
+    const filtered = list.filter((report) => report.id !== id);
 
-    const index = reports.findIndex(
-      (report) => report.id === id
-    );
-
-    if (index !== -1) {
-      reports.splice(index, 1);
+    if (filtered.length !== list.length) {
+      this.saveReports(filtered);
       return Promise.resolve(true);
     }
 
@@ -58,13 +68,8 @@ class ReportService {
   }
 
   async downloadReport(id: string): Promise<string | undefined> {
-    // Later:
-    // GET /api/reports/:id/download
-
-    const report = reports.find(
-      (report) => report.id === id
-    );
-
+    const list = this.getStoredReports();
+    const report = list.find((report) => report.id === id);
     return Promise.resolve(report?.downloadUrl);
   }
 }

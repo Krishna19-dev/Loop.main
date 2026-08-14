@@ -2,7 +2,7 @@ import { teamMembers as SEED_TEAM } from "@/data/team";
 import { TeamMember } from "@/types/team";
 
 class TeamService {
-  private storageKey = "loop_team_members";
+  private storageKey = "loop_team_members_v4";
 
   private getStoredMembers(): TeamMember[] {
     if (typeof window === "undefined") return SEED_TEAM;

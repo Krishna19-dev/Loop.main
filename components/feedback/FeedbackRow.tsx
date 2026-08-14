@@ -9,6 +9,7 @@ interface FeedbackRowProps {
   onView: (feedback: Feedback) => void;
   onStatusChange: (id: string, status: FeedbackStatus) => void;
   onDelete: (id: string) => void;
+  isViewer?: boolean;
 }
 
 export default function FeedbackRow({
@@ -16,7 +17,14 @@ export default function FeedbackRow({
   onView,
   onStatusChange,
   onDelete,
+  isViewer = false,
 }: FeedbackRowProps) {
+  const statusIconMap = {
+    Pending: "🟡 Pending",
+    Reviewed: "🔵 Reviewed",
+    Resolved: "🟢 Resolved",
+  };
+
   return (
     <tr className="border-b border-loop-border transition-colors hover:bg-cream/40">
       {/* Customer */}
@@ -57,20 +65,26 @@ export default function FeedbackRow({
         <SentimentBadge sentiment={feedback.sentiment} score={feedback.sentimentScore} />
       </td>
 
-      {/* Row Status Control */}
+      {/* Row Status Control or Read-Only Badge */}
       <td className="px-6 py-4">
-        <div className="relative inline-block">
-          <select
-            value={feedback.status}
-            onChange={(e) => onStatusChange(feedback.id, e.target.value as FeedbackStatus)}
-            className="appearance-none rounded-full px-3 py-1 pr-7 text-xs font-semibold cursor-pointer outline-none border border-loop-border bg-white text-forest shadow-sm hover:border-forest/40 transition"
-          >
-            <option value="Pending">🟡 Pending</option>
-            <option value="Reviewed">🔵 Reviewed</option>
-            <option value="Resolved">🟢 Resolved</option>
-          </select>
-          <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-taupe" />
-        </div>
+        {isViewer ? (
+          <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold border border-loop-border bg-white text-forest shadow-2xs">
+            {statusIconMap[feedback.status] || feedback.status}
+          </span>
+        ) : (
+          <div className="relative inline-block">
+            <select
+              value={feedback.status}
+              onChange={(e) => onStatusChange(feedback.id, e.target.value as FeedbackStatus)}
+              className="appearance-none rounded-full px-3 py-1 pr-7 text-xs font-semibold cursor-pointer outline-none border border-loop-border bg-white text-forest shadow-sm hover:border-forest/40 transition"
+            >
+              <option value="Pending">🟡 Pending</option>
+              <option value="Reviewed">🔵 Reviewed</option>
+              <option value="Resolved">🟢 Resolved</option>
+            </select>
+            <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-taupe" />
+          </div>
+        )}
       </td>
 
       {/* Date */}
@@ -89,13 +103,15 @@ export default function FeedbackRow({
             <Eye size={16} />
           </button>
 
-          <button
-            onClick={() => onDelete(feedback.id)}
-            title="Delete Feedback"
-            className="rounded-lg bg-terra-bg p-2 text-terra transition hover:bg-terra hover:text-white"
-          >
-            <Trash2 size={16} />
-          </button>
+          {!isViewer && (
+            <button
+              onClick={() => onDelete(feedback.id)}
+              title="Delete Feedback"
+              className="rounded-lg bg-terra-bg p-2 text-terra transition hover:bg-terra hover:text-white"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
       </td>
     </tr>

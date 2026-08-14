@@ -59,6 +59,7 @@ export default function Sidebar({ role }: SidebarProps) {
   const viewerNavItems: NavItem[] = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Workspace", href: "/workspace", icon: Building2 },
+    { name: "Feedback", href: "/feedback", icon: MessageSquare },
     { name: "Reports", href: "/reports", icon: FileText },
     { name: "Ask LOOP", href: "/ask-loop", icon: Bot },
     { name: "Settings", href: "/settings", icon: Settings },

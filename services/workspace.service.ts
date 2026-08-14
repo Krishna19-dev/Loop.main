@@ -1,38 +1,47 @@
-import { workspaces } from "@/data/workspaces";
+import { workspaces as SEED_WORKSPACES } from "@/data/workspaces";
 import { Workspace } from "@/types/workspace";
 
 class WorkspaceService {
-  async getWorkspaces(): Promise<Workspace[]> {
-    // Later:
-    // const response = await fetch("/api/workspaces");
-    // return response.json();
+  private storageKey = "loop_workspaces_v4";
 
-    return Promise.resolve([...workspaces]);
+  private getStoredWorkspaces(): Workspace[] {
+    if (typeof window === "undefined") return SEED_WORKSPACES;
+
+    const stored = localStorage.getItem(this.storageKey);
+    if (!stored) {
+      localStorage.setItem(this.storageKey, JSON.stringify(SEED_WORKSPACES));
+      return SEED_WORKSPACES;
+    }
+
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return SEED_WORKSPACES;
+    }
   }
 
-  async getWorkspaceById(
-    id: string
-  ): Promise<Workspace | undefined> {
-    // Later:
-    // const response = await fetch(`/api/workspaces/${id}`);
-    // return response.json();
+  private saveWorkspaces(list: Workspace[]): void {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(this.storageKey, JSON.stringify(list));
+    }
+  }
 
-    return Promise.resolve(
-      workspaces.find(
-        (workspace) => workspace.id === id
-      )
-    );
+  async getWorkspaces(): Promise<Workspace[]> {
+    return Promise.resolve(this.getStoredWorkspaces());
+  }
+
+  async getWorkspaceById(id: string): Promise<Workspace | undefined> {
+    const list = this.getStoredWorkspaces();
+    return Promise.resolve(list.find((w) => w.id === id));
   }
 
   async createWorkspace(
     workspace: Omit<Workspace, "id" | "createdAt">
   ): Promise<Workspace> {
-    // Later:
-    // POST /api/workspaces
-
+    const list = this.getStoredWorkspaces();
     const newWorkspace: Workspace = {
       ...workspace,
-      id: crypto.randomUUID(),
+      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
       createdAt: new Date().toLocaleDateString("en-US", {
         day: "2-digit",
         month: "short",
@@ -40,8 +49,8 @@ class WorkspaceService {
       }),
     };
 
-    workspaces.unshift(newWorkspace);
-
+    const updated = [newWorkspace, ...list];
+    this.saveWorkspaces(updated);
     return Promise.resolve(newWorkspace);
   }
 
@@ -49,37 +58,28 @@ class WorkspaceService {
     id: string,
     updatedWorkspace: Partial<Workspace>
   ): Promise<Workspace | undefined> {
-    // Later:
-    // PUT /api/workspaces/:id
-
-    const index = workspaces.findIndex(
-      (workspace) => workspace.id === id
-    );
+    const list = this.getStoredWorkspaces();
+    const index = list.findIndex((w) => w.id === id);
 
     if (index === -1) {
       return Promise.resolve(undefined);
     }
 
-    workspaces[index] = {
-      ...workspaces[index],
+    list[index] = {
+      ...list[index],
       ...updatedWorkspace,
     };
 
-    return Promise.resolve(workspaces[index]);
+    this.saveWorkspaces(list);
+    return Promise.resolve(list[index]);
   }
 
-  async deleteWorkspace(
-    id: string
-  ): Promise<boolean> {
-    // Later:
-    // DELETE /api/workspaces/:id
+  async deleteWorkspace(id: string): Promise<boolean> {
+    const list = this.getStoredWorkspaces();
+    const filtered = list.filter((w) => w.id !== id);
 
-    const index = workspaces.findIndex(
-      (workspace) => workspace.id === id
-    );
-
-    if (index !== -1) {
-      workspaces.splice(index, 1);
+    if (filtered.length !== list.length) {
+      this.saveWorkspaces(filtered);
       return Promise.resolve(true);
     }
 
@@ -87,5 +87,4 @@ class WorkspaceService {
   }
 }
 
-export const workspaceService =
-  new WorkspaceService();
+export const workspaceService = new WorkspaceService();

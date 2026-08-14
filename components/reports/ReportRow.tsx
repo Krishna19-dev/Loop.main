@@ -89,13 +89,15 @@ export default function ReportRow({
             <Download size={18} />
           </button>
 
-          <button
-            onClick={() => onDelete?.(report)}
-            className="rounded-lg bg-terra-bg p-2 text-terra transition hover:bg-red-200"
-            title="Delete Report"
-          >
-            <Trash2 size={18} />
-          </button>
+          {onDelete && (
+            <button
+              onClick={() => onDelete?.(report)}
+              className="rounded-lg bg-terra-bg p-2 text-terra transition hover:bg-red-200"
+              title="Delete Report"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
         </div>
       </td>
     </tr>

@@ -10,6 +10,31 @@ function getAiClient(): GoogleGenAI {
   return new GoogleGenAI({ apiKey });
 }
 
+const GEMINI_MODELS = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.5-flash", "gemini-2.0-flash-exp"];
+
+async function generateContentWithFallback(
+  client: GoogleGenAI,
+  contents: string,
+  config?: any
+) {
+  let lastError: unknown = null;
+  for (const model of GEMINI_MODELS) {
+    try {
+      const res = await client.models.generateContent({
+        model,
+        contents,
+        ...(config ? { config } : {}),
+      });
+      if (res && res.text) {
+        return res;
+      }
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error("Gemini AI API model generation failed.");
+}
+
 // Zod validation schema for feedback classification
 export const ClassificationSchema = z.object({
   sentiment: z.enum(["Positive", "Neutral", "Negative"]),
@@ -24,8 +49,8 @@ export type ClassificationResult = z.infer<typeof ClassificationSchema> & {
 };
 
 /**
- * Classify a customer feedback string using Gemini 2.0 Flash
- * Requests strict JSON, validates with Zod, and retries once on error.
+ * Classify a customer feedback string using Gemini AI
+ * Requests strict JSON, validates with Zod, and retries with model fallbacks.
  */
 export async function classifyFeedbackWithGemini(
   content: string,
@@ -58,23 +83,18 @@ Return a STRICT JSON object with these exact keys:
       }
 
       const client = getAiClient();
-
-      const response = await client.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              sentiment: { type: Type.STRING, enum: ["Positive", "Neutral", "Negative"] },
-              sentimentScore: { type: Type.NUMBER },
-              themes: { type: Type.ARRAY, items: { type: Type.STRING } },
-              featureArea: { type: Type.STRING },
-              rationale: { type: Type.STRING },
-            },
-            required: ["sentiment", "sentimentScore", "themes", "featureArea", "rationale"],
+      const response = await generateContentWithFallback(client, prompt, {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            sentiment: { type: Type.STRING, enum: ["Positive", "Neutral", "Negative"] },
+            sentimentScore: { type: Type.NUMBER },
+            themes: { type: Type.ARRAY, items: { type: Type.STRING } },
+            featureArea: { type: Type.STRING },
+            rationale: { type: Type.STRING },
           },
+          required: ["sentiment", "sentimentScore", "themes", "featureArea", "rationale"],
         },
       });
 
@@ -117,10 +137,18 @@ export async function generateEmbeddingWithGemini(text: string): Promise<number[
   }
 
   const client = getAiClient();
-  const response = await client.models.embedContent({
-    model: "text-embedding-004",
-    contents: text,
-  });
+  let response;
+  try {
+    response = await client.models.embedContent({
+      model: "text-embedding-004",
+      contents: text,
+    });
+  } catch {
+    response = await client.models.embedContent({
+      model: "embedding-001",
+      contents: text,
+    });
+  }
 
   const resObj = response as { embedding?: { values?: number[] }; embeddings?: Array<{ values?: number[] }> };
   const values = resObj.embedding?.values || resObj.embeddings?.[0]?.values;
@@ -155,11 +183,7 @@ Write a professional executive summary around these EXACT metrics.
 `;
 
   const client = getAiClient();
-  const response = await client.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: prompt,
-  });
-
+  const response = await generateContentWithFallback(client, prompt);
   return response.text || "Report narrative generation unavailable.";
 }
 
@@ -187,22 +211,18 @@ Return a STRICT JSON array of objects, where each object has:
 `;
 
   const client = getAiClient();
-  const response = await client.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            theme: { type: Type.STRING },
-            description: { type: Type.STRING },
-            feedbackIds: { type: Type.ARRAY, items: { type: Type.STRING } },
-          },
-          required: ["theme", "description", "feedbackIds"],
+  const response = await generateContentWithFallback(client, prompt, {
+    responseMimeType: "application/json",
+    responseSchema: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          theme: { type: Type.STRING },
+          description: { type: Type.STRING },
+          feedbackIds: { type: Type.ARRAY, items: { type: Type.STRING } },
         },
+        required: ["theme", "description", "feedbackIds"],
       },
     },
   });
@@ -215,4 +235,3 @@ Return a STRICT JSON array of objects, where each object has:
     return [];
   }
 }
-

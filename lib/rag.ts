@@ -131,10 +131,22 @@ Answer concisely and professionally:
 `;
 
   const client = new GoogleGenAI({ apiKey });
-  const response = await client.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: prompt,
-  });
+  const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.5-flash", "gemini-2.0-flash-exp"];
+  let lastErr;
 
-  return response.text || "Unable to generate grounded answer.";
+  for (const model of models) {
+    try {
+      const response = await client.models.generateContent({
+        model,
+        contents: prompt,
+      });
+      if (response && response.text) {
+        return response.text;
+      }
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  throw lastErr || new Error("Failed to generate grounded answer with Gemini.");
 }
