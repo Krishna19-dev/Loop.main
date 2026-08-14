@@ -71,7 +71,7 @@ export function HeroSection() {
 
         {/* Dashboard Mockup Showcase Placeholder */}
         <div className="mt-16 md:mt-20 max-w-5xl mx-auto">
-          <div className="relative rounded-2xl bg-[#1D463A]/90 border border-[#2A5147] p-4 sm:p-6 shadow-2xl backdrop-blur-xl ring-1 ring-[#E8C98F]/20">
+          <div className="relative rounded-2xl bg-[#1D463A] border border-[#2A5147] p-4 sm:p-6 shadow-xl ring-1 ring-[#E8C98F]/20">
             
             {/* Top Bar of Mockup */}
             <div className="flex items-center justify-between pb-4 border-b border-[#2A5147] mb-6">

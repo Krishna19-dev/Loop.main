@@ -8,7 +8,7 @@ export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0F3028]/95 backdrop-blur-md border-b border-[#2A5147]">
+    <header className="sticky top-0 z-50 bg-[#0F3028] border-b border-[#2A5147] shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group">
@@ -28,28 +28,22 @@ export function LandingHeader() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
           <a
-            href="#problem"
-            className="text-sm font-medium text-[#F9F6EF]/80 hover:text-[#E8C98F] transition-colors"
-          >
-            The Problem
-          </a>
-          <a
-            href="#how-it-works"
-            className="text-sm font-medium text-[#F9F6EF]/80 hover:text-[#E8C98F] transition-colors"
-          >
-            How It Works
-          </a>
-          <a
             href="#features"
             className="text-sm font-medium text-[#F9F6EF]/80 hover:text-[#E8C98F] transition-colors"
           >
             Features
           </a>
           <a
-            href="#trust"
+            href="#architecture"
             className="text-sm font-medium text-[#F9F6EF]/80 hover:text-[#E8C98F] transition-colors"
           >
-            Security & Trust
+            Architecture
+          </a>
+          <a
+            href="#demo"
+            className="text-sm font-medium text-[#F9F6EF]/80 hover:text-[#E8C98F] transition-colors"
+          >
+            Demo Credentials
           </a>
         </nav>
 
@@ -88,20 +82,6 @@ export function LandingHeader() {
         <div className="md:hidden bg-[#0F3028] border-b border-[#2A5147] px-4 pt-2 pb-6 space-y-4">
           <nav className="flex flex-col space-y-3 pt-2">
             <a
-              href="#problem"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-base font-medium text-[#F9F6EF] hover:text-[#E8C98F] py-2 border-b border-[#2A5147]/50"
-            >
-              The Problem
-            </a>
-            <a
-              href="#how-it-works"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-base font-medium text-[#F9F6EF] hover:text-[#E8C98F] py-2 border-b border-[#2A5147]/50"
-            >
-              How It Works
-            </a>
-            <a
               href="#features"
               onClick={() => setMobileMenuOpen(false)}
               className="text-base font-medium text-[#F9F6EF] hover:text-[#E8C98F] py-2 border-b border-[#2A5147]/50"
@@ -109,11 +89,18 @@ export function LandingHeader() {
               Features
             </a>
             <a
-              href="#trust"
+              href="#architecture"
               onClick={() => setMobileMenuOpen(false)}
               className="text-base font-medium text-[#F9F6EF] hover:text-[#E8C98F] py-2 border-b border-[#2A5147]/50"
             >
-              Security & Trust
+              Architecture
+            </a>
+            <a
+              href="#demo"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-base font-medium text-[#F9F6EF] hover:text-[#E8C98F] py-2 border-b border-[#2A5147]/50"
+            >
+              Demo Credentials
             </a>
           </nav>
           <div className="flex flex-col gap-3 pt-2">

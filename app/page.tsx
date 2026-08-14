@@ -1,11 +1,8 @@
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { ProblemSection } from "@/components/landing/ProblemSection";
-import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
-import { SystemMetricsSection } from "@/components/landing/SystemMetricsSection";
-import { TrustSection } from "@/components/landing/TrustSection";
-import { CtaSection } from "@/components/landing/CtaSection";
+import { ArchitectureSection } from "@/components/landing/ArchitectureSection";
+import { DemoAccountsSection } from "@/components/landing/DemoAccountsSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 
 export const metadata = {
@@ -24,23 +21,14 @@ export default function HomePage() {
         {/* 1. Hero Section */}
         <HeroSection />
 
-        {/* 2. Problem Section */}
-        <ProblemSection />
-
-        {/* 3. How It Works Section */}
-        <HowItWorksSection />
-
-        {/* 4. Features Grid */}
+        {/* 2. Features Grid */}
         <FeaturesSection />
 
-        {/* 5. High-Performance Infrastructure & System Capacity Metrics */}
-        <SystemMetricsSection />
+        {/* 3. System Architecture & AI Cascade */}
+        <ArchitectureSection />
 
-        {/* 6. Multi-tenant & Security Trust Strip */}
-        <TrustSection />
-
-        {/* 7. Final CTA Section */}
-        <CtaSection />
+        {/* 4. Quick Demo Credentials */}
+        <DemoAccountsSection />
       </main>
 
       {/* Footer */}
