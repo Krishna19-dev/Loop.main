@@ -12,6 +12,16 @@
 
 ---
 
+## 🎥 Product Demo & Video Walkthrough
+
+<video src="./VID_20260815_183049.mp4" controls width="100%" style="max-width: 100%;">
+  Your browser does not support the video tag. You can <a href="./VID_20260815_183049.mp4">download/watch the video file directly</a>.
+</video>
+
+> 📌 **Direct Link**: [Watch / Download Demo Video (`VID_20260815_183049.mp4`)](./VID_20260815_183049.mp4)
+
+---
+
 ## 🌟 Overview
 
 **Project LOOP** is an AI-powered SaaS platform designed to transform scattered customer feedback (support tickets, app crash reports, feature requests) into prioritized, evidence-backed product intelligence.
