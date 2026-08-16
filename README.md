@@ -14,11 +14,9 @@
 
 ## 🎥 Product Demo & Video Walkthrough
 
-<video src="./VID_20260815_183049.mp4" controls width="100%" style="max-width: 100%;">
-  Your browser does not support the video tag. You can <a href="./VID_20260815_183049.mp4">download/watch the video file directly</a>.
-</video>
+[![Watch Demo Video](https://img.shields.io/badge/▶️_Play_Demo_Video-VID__20260815__183049.mp4-0066FF?style=for-the-badge&logo=github)](https://github.com/Krishna19-dev/Loop.main/blob/main/VID_20260815_183049.mp4)
 
-> 📌 **Direct Link**: [Watch / Download Demo Video (`VID_20260815_183049.mp4`)](./VID_20260815_183049.mp4)
+> 📹 **Click to Watch / Download Video**: [**`VID_20260815_183049.mp4` on GitHub**](https://github.com/Krishna19-dev/Loop.main/blob/main/VID_20260815_183049.mp4)
 
 ---
 
